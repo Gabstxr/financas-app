@@ -534,16 +534,33 @@ fix/*       → ex: fix/balance-calculation
 hotfix/*    → correções urgentes em main
 ```
 
-### Conventional Commits
+### Convenção de Commits (Gitmoji)
+
+Formato obrigatório: `:emoji: tipo: descrição em PT-BR`
+
+| Emoji code | Emoji | Tipo | Quando usar |
+|---|---|---|---|
+| `:tada:` | 🎉 | — | Commit inicial |
+| `:sparkles:` | ✨ | feat | Nova funcionalidade |
+| `:bug:` | 🐛 | fix | Correção de bug |
+| `:books:` | 📚 | docs | Documentação |
+| `:recycle:` | ♻️ | refactor | Refatoração de código |
+| `:lipstick:` | 💄 | feat | Estilização / UI |
+| `:zap:` | ⚡ | perf | Melhoria de performance |
+| `:test_tube:` | 🧪 | test | Testes |
+| `:bricks:` | 🧱 | ci | CI/CD, pipelines |
+| `:boom:` | 💥 | fix | Correção de mudança que quebrou algo |
+| `:broom:` | 🧹 | cleanup | Limpeza de código morto |
+| `:wastebasket:` | 🗑️ | remove | Remoção de arquivos/código |
 
 ```bash
-feat: adiciona tela de cadastro de transação
-fix: corrige cálculo de saldo com transferências
-refactor: extrai CurrencyFormatter para core/utils
-test: adiciona testes do TransactionsBloc
-docs: atualiza README com instruções de setup
-chore: atualiza dependências Firebase para v5
-style: padroniza espaçamentos no DashboardPage
+# Exemplos
+git commit -m ":sparkles: feat: Página de cadastro de transação"
+git commit -m ":bug: fix: Corrige cálculo de saldo com transferências"
+git commit -m ":recycle: refactor: Extrai CurrencyFormatter para core/utils"
+git commit -m ":test_tube: test: Testes do TransactionsBloc"
+git commit -m ":books: docs: Atualiza README com instruções de setup"
+git commit -m ":lipstick: feat: Padroniza espaçamentos no DashboardPage"
 ```
 
 ### Fluxo de Trabalho
@@ -556,7 +573,7 @@ git checkout -b feature/reports-pie-chart
 
 # 2. Commits atômicos durante o desenvolvimento
 git add lib/features/reports/
-git commit -m "feat: adiciona gráfico de pizza em ReportsPage"
+git commit -m ":sparkles: feat: Gráfico de pizza em ReportsPage"
 
 # 3. Push e PR para develop
 git push origin feature/reports-pie-chart
