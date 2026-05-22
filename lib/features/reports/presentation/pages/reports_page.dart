@@ -46,7 +46,7 @@ class _ReportsView extends StatelessWidget {
                 child: CircularProgressIndicator(color: AppColors.primary),
               ),
             ReportsError(:final message) => Center(child: Text(message)),
-            ReportsLoaded() => _buildContent(context, state as ReportsLoaded),
+            ReportsLoaded() => _buildContent(context, state),
             _ => const SizedBox(),
           },
         );

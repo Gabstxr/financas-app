@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -19,33 +18,42 @@ import '../widgets/balance_card.dart';
 import '../widgets/month_selector.dart';
 import '../widgets/summary_cards_row.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) {
-        final authState = context.read<AuthBloc>().state;
-        final cubit = sl<DashboardCubit>();
-        if (authState is AuthAuthenticated) {
-          cubit.load(authState.user.uid);
-        }
-        return cubit;
-      },
-      child: const _DashboardView(),
-    );
-  }
+  State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardView extends StatelessWidget {
-  const _DashboardView();
+class _DashboardPageState extends State<DashboardPage> {
+  late final DashboardCubit _dashboardCubit;
+  late final AuthBloc _authBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _dashboardCubit = sl<DashboardCubit>();
+    _authBloc = sl<AuthBloc>();
+    final authState = _authBloc.state;
+    if (authState is AuthAuthenticated) {
+      _dashboardCubit.load(authState.user.uid);
+    }
+  }
+
+  @override
+  void dispose() {
+    _dashboardCubit.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<DashboardCubit, DashboardState>(
-      builder: (context, state) {
-        final authState = context.read<AuthBloc>().state;
+    return StreamBuilder<DashboardState>(
+      stream: _dashboardCubit.stream,
+      initialData: _dashboardCubit.state,
+      builder: (context, snapshot) {
+        final state = snapshot.data ?? _dashboardCubit.state;
+        final authState = _authBloc.state;
         final userName = authState is AuthAuthenticated
             ? authState.user.displayName.split(' ').first
             : 'Usuário';
@@ -78,7 +86,7 @@ class _DashboardView extends StatelessWidget {
             onRefresh: () async {
               if (authState is AuthAuthenticated) {
                 final month = state is DashboardLoaded ? state.currentMonth : null;
-                context.read<DashboardCubit>().load(authState.user.uid, month: month);
+                _dashboardCubit.load(authState.user.uid, month: month);
               }
             },
             child: switch (state) {
@@ -88,7 +96,7 @@ class _DashboardView extends StatelessWidget {
               DashboardError(:final message) => Center(
                   child: Text(message, style: AppTextStyles.bodyMedium),
                 ),
-              DashboardLoaded() => _buildContent(context, state as DashboardLoaded),
+              DashboardLoaded() => _buildContent(context, state),
               _ => const SizedBox(),
             },
           ),
@@ -104,23 +112,21 @@ class _DashboardView extends StatelessWidget {
         MonthSelector(
           currentMonth: state.currentMonth,
           onPrevious: () {
-            final authState = context.read<AuthBloc>().state;
+            final authState = _authBloc.state;
             if (authState is AuthAuthenticated) {
               final prev = DateTime(
                   state.currentMonth.year, state.currentMonth.month - 1);
-              context.read<DashboardCubit>().changeMonth(authState.user.uid, prev);
+              _dashboardCubit.changeMonth(authState.user.uid, prev);
             }
           },
           onNext: () {
             final now = DateTime.now();
             if (state.currentMonth.isBefore(DateTime(now.year, now.month))) {
-              final authState = context.read<AuthBloc>().state;
+              final authState = _authBloc.state;
               if (authState is AuthAuthenticated) {
                 final next = DateTime(
                     state.currentMonth.year, state.currentMonth.month + 1);
-                context
-                    .read<DashboardCubit>()
-                    .changeMonth(authState.user.uid, next);
+                _dashboardCubit.changeMonth(authState.user.uid, next);
               }
             }
           },
