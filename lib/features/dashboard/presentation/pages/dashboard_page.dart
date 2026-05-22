@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -27,14 +28,12 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   late final DashboardCubit _dashboardCubit;
-  late final AuthBloc _authBloc;
 
   @override
   void initState() {
     super.initState();
     _dashboardCubit = sl<DashboardCubit>();
-    _authBloc = sl<AuthBloc>();
-    final authState = _authBloc.state;
+    final authState = context.read<AuthBloc>().state;
     if (authState is AuthAuthenticated) {
       _dashboardCubit.load(authState.user.uid);
     }
@@ -53,7 +52,7 @@ class _DashboardPageState extends State<DashboardPage> {
       initialData: _dashboardCubit.state,
       builder: (context, snapshot) {
         final state = snapshot.data ?? _dashboardCubit.state;
-        final authState = _authBloc.state;
+        final authState = context.read<AuthBloc>().state;
         final userName = authState is AuthAuthenticated
             ? authState.user.displayName.split(' ').first
             : 'Usuário';
@@ -84,9 +83,11 @@ class _DashboardPageState extends State<DashboardPage> {
           body: RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () async {
-              if (authState is AuthAuthenticated) {
-                final month = state is DashboardLoaded ? state.currentMonth : null;
-                _dashboardCubit.load(authState.user.uid, month: month);
+              final s = context.read<AuthBloc>().state;
+              if (s is AuthAuthenticated) {
+                final month =
+                    state is DashboardLoaded ? state.currentMonth : null;
+                _dashboardCubit.load(s.user.uid, month: month);
               }
             },
             child: switch (state) {
@@ -112,7 +113,7 @@ class _DashboardPageState extends State<DashboardPage> {
         MonthSelector(
           currentMonth: state.currentMonth,
           onPrevious: () {
-            final authState = _authBloc.state;
+            final authState = context.read<AuthBloc>().state;
             if (authState is AuthAuthenticated) {
               final prev = DateTime(
                   state.currentMonth.year, state.currentMonth.month - 1);
@@ -122,7 +123,7 @@ class _DashboardPageState extends State<DashboardPage> {
           onNext: () {
             final now = DateTime.now();
             if (state.currentMonth.isBefore(DateTime(now.year, now.month))) {
-              final authState = _authBloc.state;
+              final authState = context.read<AuthBloc>().state;
               if (authState is AuthAuthenticated) {
                 final next = DateTime(
                     state.currentMonth.year, state.currentMonth.month + 1);

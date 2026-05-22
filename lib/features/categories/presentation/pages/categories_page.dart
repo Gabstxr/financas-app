@@ -7,7 +7,6 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/loading_overlay.dart';
-import '../../../../injection/injection_container.dart';
 import '../../../../router/app_router.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/category_entity.dart';
@@ -18,17 +17,7 @@ class CategoriesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) {
-        final authState = context.read<AuthBloc>().state;
-        final bloc = sl<CategoriesBloc>();
-        if (authState is AuthAuthenticated) {
-          bloc.add(CategoriesLoadRequested(authState.user.uid));
-        }
-        return bloc;
-      },
-      child: const _CategoriesView(),
-    );
+    return const _CategoriesView();
   }
 }
 

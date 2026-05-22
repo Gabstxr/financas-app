@@ -11,7 +11,6 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
-import '../../../../injection/injection_container.dart';
 import '../../../accounts/domain/entities/account_entity.dart';
 import '../../../accounts/presentation/bloc/accounts_bloc.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -125,12 +124,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider.value(value: sl<AccountsBloc>()),
-        BlocProvider.value(value: sl<CategoriesBloc>()),
-      ],
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
           title: Text(_isEditing ? AppStrings.editTransaction : AppStrings.addTransaction),
@@ -186,7 +180,6 @@ class _AddTransactionPageState extends State<AddTransactionPage>
             ),
           ],
         ),
-      ),
     );
   }
 

@@ -12,32 +12,39 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../transactions/presentation/widgets/month_navigation_bar.dart';
 import '../bloc/reports_cubit.dart';
 
-class ReportsPage extends StatelessWidget {
+class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) {
-        final authState = context.read<AuthBloc>().state;
-        final cubit = sl<ReportsCubit>();
-        if (authState is AuthAuthenticated) {
-          cubit.load(authState.user.uid);
-        }
-        return cubit;
-      },
-      child: const _ReportsView(),
-    );
-  }
+  State<ReportsPage> createState() => _ReportsPageState();
 }
 
-class _ReportsView extends StatelessWidget {
-  const _ReportsView();
+class _ReportsPageState extends State<ReportsPage> {
+  late final ReportsCubit _reportsCubit;
+
+  @override
+  void initState() {
+    super.initState();
+    _reportsCubit = sl<ReportsCubit>();
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      _reportsCubit.load(authState.user.uid);
+    }
+  }
+
+  @override
+  void dispose() {
+    _reportsCubit.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ReportsCubit, ReportsState>(
-      builder: (context, state) {
+    return StreamBuilder<ReportsState>(
+      stream: _reportsCubit.stream,
+      initialData: _reportsCubit.state,
+      builder: (context, snapshot) {
+        final state = snapshot.data ?? _reportsCubit.state;
         return Scaffold(
           backgroundColor: AppColors.background,
           appBar: AppBar(title: const Text('Relatórios')),
@@ -67,7 +74,7 @@ class _ReportsView extends StatelessWidget {
               if (authState is AuthAuthenticated) {
                 final prev = DateTime(
                     state.currentMonth.year, state.currentMonth.month - 1);
-                context.read<ReportsCubit>().load(authState.user.uid, month: prev);
+                _reportsCubit.load(authState.user.uid, month: prev);
               }
             },
             onNext: () {
@@ -77,9 +84,7 @@ class _ReportsView extends StatelessWidget {
                 if (authState is AuthAuthenticated) {
                   final next = DateTime(
                       state.currentMonth.year, state.currentMonth.month + 1);
-                  context
-                      .read<ReportsCubit>()
-                      .load(authState.user.uid, month: next);
+                  _reportsCubit.load(authState.user.uid, month: next);
                 }
               }
             },

@@ -33,6 +33,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSignInWithGoogleRequested>(_onSignInWithGoogle);
     on<AuthSignUpRequested>(_onSignUp);
     on<AuthSignOutRequested>(_onSignOut);
+    on<AuthOnboardingCompleted>(_onOnboardingCompleted);
     on<_AuthUserChanged>(_onUserChanged);
   }
 
@@ -88,6 +89,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onSignOut(AuthSignOutRequested event, Emitter<AuthState> emit) async {
     await signOut();
     emit(AuthUnauthenticated());
+  }
+
+  Future<void> _onOnboardingCompleted(
+    AuthOnboardingCompleted event,
+    Emitter<AuthState> emit,
+  ) async {
+    await authRepository.completeOnboarding(event.userId);
+    if (state is AuthAuthenticated) {
+      emit(AuthAuthenticated(
+        (state as AuthAuthenticated).user.copyWith(onboardingDone: true),
+      ));
+    }
   }
 
   @override

@@ -70,12 +70,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
     // Seed categorias padrão
     await sl<CategoriesRemoteDataSource>().seedDefaultCategories(userId);
 
-    // Marca onboarding como concluído
-    // ignore: use_build_context_synchronously
-    context.read<AuthBloc>().add(AuthCheckRequested());
-
+    if (!context.mounted) return;
+    context.read<AuthBloc>().add(AuthOnboardingCompleted(userId));
     setState(() => _isLoading = false);
-    if (context.mounted) context.go(AppRoutes.dashboard);
+    context.go(AppRoutes.dashboard);
   }
 
   @override

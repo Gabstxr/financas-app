@@ -38,6 +38,14 @@ class AuthSignUpRequested extends AuthEvent {
 
 class AuthSignOutRequested extends AuthEvent {}
 
+class AuthOnboardingCompleted extends AuthEvent {
+  final String userId;
+  const AuthOnboardingCompleted(this.userId);
+
+  @override
+  List<Object> get props => [userId];
+}
+
 class _AuthUserChanged extends AuthEvent {
   final UserEntity? user;
   const _AuthUserChanged(this.user);
