@@ -1,0 +1,94 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:equatable/equatable.dart';
+import '../../domain/entities/transaction_entity.dart';
+import '../../domain/usecases/add_transaction.dart';
+import '../../domain/usecases/delete_transaction.dart';
+import '../../domain/usecases/get_transactions_by_month.dart';
+import '../../domain/usecases/update_transaction.dart';
+
+part 'transactions_event.dart';
+part 'transactions_state.dart';
+
+class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
+  final GetTransactionsByMonth getTransactionsByMonth;
+  final AddTransaction addTransaction;
+  final UpdateTransaction updateTransaction;
+  final DeleteTransaction deleteTransaction;
+
+  TransactionsBloc({
+    required this.getTransactionsByMonth,
+    required this.addTransaction,
+    required this.updateTransaction,
+    required this.deleteTransaction,
+  }) : super(TransactionsInitial()) {
+    on<TransactionsLoadRequested>(_onLoad);
+    on<TransactionsAddRequested>(_onAdd);
+    on<TransactionsUpdateRequested>(_onUpdate);
+    on<TransactionsDeleteRequested>(_onDelete);
+  }
+
+  Future<void> _onLoad(TransactionsLoadRequested event, Emitter<TransactionsState> emit) async {
+    emit(TransactionsLoading());
+    final result = await getTransactionsByMonth(event.userId, event.year, event.month);
+    result.fold(
+      (failure) => emit(TransactionsError(failure.message)),
+      (transactions) => emit(TransactionsLoaded(
+        transactions: transactions,
+        year: event.year,
+        month: event.month,
+      )),
+    );
+  }
+
+  Future<void> _onAdd(TransactionsAddRequested event, Emitter<TransactionsState> emit) async {
+    if (state is! TransactionsLoaded) return;
+    final current = state as TransactionsLoaded;
+
+    final result = await addTransaction(event.transaction);
+    result.fold(
+      (failure) => emit(TransactionsError(failure.message)),
+      (transaction) {
+        final sameMonth = transaction.date.year == current.year &&
+            transaction.date.month == current.month;
+        if (sameMonth) {
+          final updated = [transaction, ...current.transactions];
+          updated.sort((a, b) => b.date.compareTo(a.date));
+          emit(current.copyWith(transactions: updated));
+        }
+      },
+    );
+  }
+
+  Future<void> _onUpdate(
+      TransactionsUpdateRequested event, Emitter<TransactionsState> emit) async {
+    if (state is! TransactionsLoaded) return;
+    final current = state as TransactionsLoaded;
+
+    final result = await updateTransaction(event.transaction);
+    result.fold(
+      (failure) => emit(TransactionsError(failure.message)),
+      (updated) {
+        final transactions = current.transactions
+            .map((t) => t.id == updated.id ? updated : t)
+            .toList();
+        emit(current.copyWith(transactions: transactions));
+      },
+    );
+  }
+
+  Future<void> _onDelete(
+      TransactionsDeleteRequested event, Emitter<TransactionsState> emit) async {
+    if (state is! TransactionsLoaded) return;
+    final current = state as TransactionsLoaded;
+
+    final result = await deleteTransaction(event.userId, event.transactionId);
+    result.fold(
+      (failure) => emit(TransactionsError(failure.message)),
+      (_) {
+        final transactions =
+            current.transactions.where((t) => t.id != event.transactionId).toList();
+        emit(current.copyWith(transactions: transactions));
+      },
+    );
+  }
+}
