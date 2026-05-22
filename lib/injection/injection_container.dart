@@ -45,9 +45,9 @@ final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
   // External
+  await GoogleSignIn.instance.initialize();
   sl.registerLazySingleton(() => FirebaseAuth.instance);
   sl.registerLazySingleton(() => FirebaseFirestore.instance);
-  sl.registerLazySingleton(() => GoogleSignIn());
 
   // Auth
   sl.registerLazySingleton<AuthRemoteDataSource>(

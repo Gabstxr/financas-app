@@ -18,7 +18,6 @@ abstract class AuthRemoteDataSource {
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   AuthRemoteDataSourceImpl(this._auth, this._firestore);
 
@@ -60,12 +59,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> signInWithGoogle() async {
     try {
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) throw const AuthException('Login cancelado.');
-
-      final googleAuth = await googleUser.authentication;
+      final googleUser = await GoogleSignIn.instance.authenticate();
+      final googleAuth = googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
@@ -83,6 +79,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
 
       return _getUserFromFirestore(uid);
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        throw const AuthException('Login cancelado.');
+      }
+      throw AuthException(e.description ?? 'Erro ao fazer login com Google.');
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapAuthError(e.code));
     }
@@ -113,7 +114,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> signOut() async {
     await Future.wait([
       _auth.signOut(),
-      _googleSignIn.signOut(),
+      GoogleSignIn.instance.signOut(),
     ]);
   }
 
