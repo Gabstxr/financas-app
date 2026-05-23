@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -42,6 +43,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     _authSubscription?.cancel();
     _authSubscription = authRepository.authStateChanges.listen(
       (user) => add(_AuthUserChanged(user)),
+      onError: (error, stack) {
+        debugPrint('[AuthBloc] stream error: $error');
+        // Só desbloqueia a splash se ainda não estiver autenticado.
+        // Evita deslogar o usuário em erros transientes do Firestore.
+        if (state is! AuthAuthenticated) {
+          add(const _AuthUserChanged(null));
+        }
+      },
     );
   }
 

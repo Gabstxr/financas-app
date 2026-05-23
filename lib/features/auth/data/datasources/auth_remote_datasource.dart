@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../../core/errors/exceptions.dart';
@@ -26,12 +25,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Stream<UserModel?> get authStateChanges {
     return _auth.authStateChanges().asyncMap((firebaseUser) async {
       if (firebaseUser == null) return null;
-      try {
-        return await _getUserFromFirestore(firebaseUser.uid);
-      } catch (e) {
-        debugPrint('Erro ao buscar usuário no Firestore: $e');
-        return null;
-      }
+      return _getUserFromFirestore(firebaseUser.uid);
     });
   }
 
