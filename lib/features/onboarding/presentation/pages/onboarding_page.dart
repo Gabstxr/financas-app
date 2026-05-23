@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -10,7 +9,6 @@ import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../injection/injection_container.dart';
-import '../../../../router/app_router.dart';
 import '../../../accounts/domain/entities/account_entity.dart';
 import '../../../accounts/domain/usecases/add_account.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -52,7 +50,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
             0
         : 0;
 
-    // Cria conta inicial
     final account = AccountEntity(
       id: '',
       userId: userId,
@@ -65,15 +62,23 @@ class _OnboardingPageState extends State<OnboardingPage> {
       createdAt: DateTime.now(),
     );
 
-    await sl<AddAccount>().call(account);
-
-    // Seed categorias padrão
-    await sl<CategoriesRemoteDataSource>().seedDefaultCategories(userId);
+    try {
+      await sl<AddAccount>().call(account);
+      await sl<CategoriesRemoteDataSource>().seedDefaultCategories(userId);
+    } catch (e) {
+      if (!context.mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao configurar conta. Tente novamente.')),
+      );
+      return;
+    }
 
     if (!context.mounted) return;
+    // Dispara o evento — o router redirect navega para dashboard automaticamente
+    // quando o BLoC emitir AuthAuthenticated(onboardingDone: true).
+    // NÃO chamar context.go() aqui para evitar race condition com o redirect.
     context.read<AuthBloc>().add(AuthOnboardingCompleted(userId));
-    setState(() => _isLoading = false);
-    context.go(AppRoutes.dashboard);
   }
 
   @override

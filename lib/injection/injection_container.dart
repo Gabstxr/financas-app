@@ -45,7 +45,11 @@ final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
   // External
-  await GoogleSignIn.instance.initialize();
+  try {
+    await GoogleSignIn.instance.initialize();
+  } catch (_) {
+    // Google Play Services unavailable (emulator sem GMS) — Google Sign-In desativado
+  }
   sl.registerLazySingleton(() => FirebaseAuth.instance);
   sl.registerLazySingleton(() => FirebaseFirestore.instance);
 
