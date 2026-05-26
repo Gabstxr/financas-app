@@ -58,9 +58,9 @@ class TransactionDetailPage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSizes.xl),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppSizes.radiusXl),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -68,7 +68,7 @@ class TransactionDetailPage extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -148,10 +148,9 @@ class TransactionDetailPage extends StatelessWidget {
             onPressed: () {
               final authState = context.read<AuthBloc>().state;
               if (authState is AuthAuthenticated) {
-                context.read<TransactionsBloc>().add(TransactionsDeleteRequested(
-                      userId: authState.user.uid,
-                      transactionId: transaction.id,
-                    ));
+                context.read<TransactionsBloc>().add(
+                      TransactionsDeleteRequested(transaction),
+                    );
               }
               Navigator.pop(dialogContext);
               context.pop();

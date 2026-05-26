@@ -5,8 +5,8 @@ import '../models/transaction_model.dart';
 abstract class TransactionsRemoteDataSource {
   Future<List<TransactionModel>> getTransactionsByMonth(String userId, int year, int month);
   Future<TransactionModel> addTransaction(TransactionModel transaction);
-  Future<TransactionModel> updateTransaction(TransactionModel transaction);
-  Future<void> deleteTransaction(String userId, String transactionId);
+  Future<TransactionModel> updateTransaction(TransactionModel oldTransaction, TransactionModel newTransaction);
+  Future<void> deleteTransaction(TransactionModel transaction);
 }
 
 class TransactionsRemoteDataSourceImpl implements TransactionsRemoteDataSource {
@@ -74,25 +74,65 @@ class TransactionsRemoteDataSourceImpl implements TransactionsRemoteDataSource {
   }
 
   @override
-  Future<TransactionModel> updateTransaction(TransactionModel transaction) async {
+  Future<TransactionModel> updateTransaction(
+    TransactionModel oldTransaction,
+    TransactionModel newTransaction,
+  ) async {
     try {
-      await _collection(transaction.userId)
-          .doc(transaction.id)
-          .update(transaction.toFirestore());
-      final doc = await _collection(transaction.userId).doc(transaction.id).get();
-      return TransactionModel.fromFirestore(doc, transaction.userId);
+      final batch = _firestore.batch();
+
+      batch.update(
+        _collection(newTransaction.userId).doc(newTransaction.id),
+        newTransaction.toFirestore(),
+      );
+
+      if (!oldTransaction.isTransfer) {
+        final reverseDelta =
+            oldTransaction.isIncome ? -oldTransaction.amount : oldTransaction.amount;
+        batch.update(
+          _accountDoc(oldTransaction.userId, oldTransaction.accountId),
+          {'balance': FieldValue.increment(reverseDelta)},
+        );
+      }
+
+      if (!newTransaction.isTransfer) {
+        final applyDelta =
+            newTransaction.isIncome ? newTransaction.amount : -newTransaction.amount;
+        batch.update(
+          _accountDoc(newTransaction.userId, newTransaction.accountId),
+          {'balance': FieldValue.increment(applyDelta)},
+        );
+      }
+
+      await batch.commit();
+      final doc =
+          await _collection(newTransaction.userId).doc(newTransaction.id).get();
+      return TransactionModel.fromFirestore(doc, newTransaction.userId);
     } catch (_) {
       throw const ServerException();
     }
   }
 
   @override
-  Future<void> deleteTransaction(String userId, String transactionId) async {
+  Future<void> deleteTransaction(TransactionModel transaction) async {
     try {
-      await _collection(userId).doc(transactionId).update({
-        'isDeleted': true,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      final batch = _firestore.batch();
+
+      batch.update(
+        _collection(transaction.userId).doc(transaction.id),
+        {'isDeleted': true, 'updatedAt': FieldValue.serverTimestamp()},
+      );
+
+      if (!transaction.isTransfer) {
+        final reverseDelta =
+            transaction.isIncome ? -transaction.amount : transaction.amount;
+        batch.update(
+          _accountDoc(transaction.userId, transaction.accountId),
+          {'balance': FieldValue.increment(reverseDelta)},
+        );
+      }
+
+      await batch.commit();
     } catch (_) {
       throw const ServerException();
     }

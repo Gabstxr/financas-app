@@ -23,16 +23,19 @@ class TransactionsAddRequested extends TransactionsEvent {
 }
 
 class TransactionsUpdateRequested extends TransactionsEvent {
+  final TransactionEntity oldTransaction;
   final TransactionEntity transaction;
-  const TransactionsUpdateRequested(this.transaction);
+  const TransactionsUpdateRequested({
+    required this.oldTransaction,
+    required this.transaction,
+  });
   @override
-  List<Object> get props => [transaction];
+  List<Object> get props => [oldTransaction, transaction];
 }
 
 class TransactionsDeleteRequested extends TransactionsEvent {
-  final String userId;
-  final String transactionId;
-  const TransactionsDeleteRequested({required this.userId, required this.transactionId});
+  final TransactionEntity transaction;
+  const TransactionsDeleteRequested(this.transaction);
   @override
-  List<Object> get props => [userId, transactionId];
+  List<Object> get props => [transaction];
 }

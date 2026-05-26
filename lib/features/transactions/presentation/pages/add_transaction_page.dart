@@ -109,7 +109,10 @@ class _AddTransactionPageState extends State<AddTransactionPage>
     );
 
     if (_isEditing) {
-      context.read<TransactionsBloc>().add(TransactionsUpdateRequested(transaction));
+      context.read<TransactionsBloc>().add(TransactionsUpdateRequested(
+            oldTransaction: widget.transaction!,
+            transaction: transaction,
+          ));
     } else {
       context.read<TransactionsBloc>().add(TransactionsAddRequested(transaction));
     }

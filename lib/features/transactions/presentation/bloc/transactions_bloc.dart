@@ -69,10 +69,11 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
     if (state is! TransactionsLoaded) return;
     final current = state as TransactionsLoaded;
 
-    final result = await updateTransaction(event.transaction);
+    final result = await updateTransaction(event.oldTransaction, event.transaction);
     result.fold(
       (failure) => emit(TransactionsError(failure.message)),
       (updated) {
+        accountsBloc.add(AccountsLoadRequested(updated.userId));
         final transactions = current.transactions
             .map((t) => t.id == updated.id ? updated : t)
             .toList();
@@ -86,12 +87,14 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
     if (state is! TransactionsLoaded) return;
     final current = state as TransactionsLoaded;
 
-    final result = await deleteTransaction(event.userId, event.transactionId);
+    final result = await deleteTransaction(event.transaction);
     result.fold(
       (failure) => emit(TransactionsError(failure.message)),
       (_) {
-        final transactions =
-            current.transactions.where((t) => t.id != event.transactionId).toList();
+        accountsBloc.add(AccountsLoadRequested(event.transaction.userId));
+        final transactions = current.transactions
+            .where((t) => t.id != event.transaction.id)
+            .toList();
         emit(current.copyWith(transactions: transactions));
       },
     );

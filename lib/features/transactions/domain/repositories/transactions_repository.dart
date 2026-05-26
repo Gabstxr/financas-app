@@ -9,6 +9,9 @@ abstract class TransactionsRepository {
     int month,
   );
   Future<Either<Failure, TransactionEntity>> addTransaction(TransactionEntity transaction);
-  Future<Either<Failure, TransactionEntity>> updateTransaction(TransactionEntity transaction);
-  Future<Either<Failure, void>> deleteTransaction(String userId, String transactionId);
+  Future<Either<Failure, TransactionEntity>> updateTransaction(
+    TransactionEntity oldTransaction,
+    TransactionEntity newTransaction,
+  );
+  Future<Either<Failure, void>> deleteTransaction(TransactionEntity transaction);
 }

@@ -37,10 +37,14 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
 
   @override
   Future<Either<Failure, TransactionEntity>> updateTransaction(
-      TransactionEntity transaction) async {
+    TransactionEntity oldTransaction,
+    TransactionEntity newTransaction,
+  ) async {
     try {
-      final model = _toModel(transaction);
-      final result = await _dataSource.updateTransaction(model);
+      final result = await _dataSource.updateTransaction(
+        _toModel(oldTransaction),
+        _toModel(newTransaction),
+      );
       return Right(result);
     } on ServerException {
       return const Left(ServerFailure());
@@ -48,9 +52,9 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteTransaction(String userId, String transactionId) async {
+  Future<Either<Failure, void>> deleteTransaction(TransactionEntity transaction) async {
     try {
-      await _dataSource.deleteTransaction(userId, transactionId);
+      await _dataSource.deleteTransaction(_toModel(transaction));
       return const Right(null);
     } on ServerException {
       return const Left(ServerFailure());

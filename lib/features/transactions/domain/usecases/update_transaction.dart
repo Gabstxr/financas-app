@@ -7,7 +7,10 @@ class UpdateTransaction {
   final TransactionsRepository repository;
   const UpdateTransaction(this.repository);
 
-  Future<Either<Failure, TransactionEntity>> call(TransactionEntity transaction) {
-    return repository.updateTransaction(transaction);
+  Future<Either<Failure, TransactionEntity>> call(
+    TransactionEntity oldTransaction,
+    TransactionEntity newTransaction,
+  ) {
+    return repository.updateTransaction(oldTransaction, newTransaction);
   }
 }
