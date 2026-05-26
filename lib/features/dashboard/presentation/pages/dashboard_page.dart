@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:intl/intl.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -151,6 +153,13 @@ class _DashboardPageState extends State<DashboardPage> {
             child: _HealthCard(state: state),
           ),
         ],
+        if (state.pendingBills.isNotEmpty) ...[
+          const SizedBox(height: AppSizes.md),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+            child: _UpcomingBillsCard(state: state),
+          ),
+        ],
         const SizedBox(height: AppSizes.lg),
         if (state.recentTransactions.isNotEmpty) ...[
           Padding(
@@ -198,6 +207,100 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         const SizedBox(height: 100),
       ],
+    );
+  }
+}
+
+class _UpcomingBillsCard extends StatelessWidget {
+  final DashboardLoaded state;
+  const _UpcomingBillsCard({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final overdue = state.pendingBills.where((b) => b.isOverdue).toList();
+    final dueSoon = state.pendingBills.where((b) => b.isDueSoon).toList();
+    final headerColor = overdue.isNotEmpty ? AppColors.expense : AppColors.warning;
+
+    return GestureDetector(
+      onTap: () => context.push(AppRoutes.bills),
+      child: Container(
+        padding: const EdgeInsets.all(AppSizes.md),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+          border: Border.all(
+            color: headerColor.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.receipt_long_outlined, color: headerColor, size: 18),
+                const SizedBox(width: AppSizes.xs),
+                Text('Contas a pagar', style: AppTextStyles.labelMedium),
+                const Spacer(),
+                Text(
+                  'Ver todas',
+                  style: AppTextStyles.labelSmall
+                      .copyWith(color: AppColors.primaryLight),
+                ),
+                const Icon(Icons.chevron_right_rounded,
+                    size: 16, color: AppColors.primaryLight),
+              ],
+            ),
+            const SizedBox(height: AppSizes.sm),
+            ...state.pendingBills.take(3).map((b) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSizes.xs),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: b.isOverdue ? AppColors.expense : AppColors.warning,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: AppSizes.sm),
+                      Expanded(
+                        child: Text(b.name, style: AppTextStyles.bodySmall),
+                      ),
+                      Text(
+                        DateFormat('dd/MM', 'pt_BR').format(b.dueDate),
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: b.isOverdue ? AppColors.expense : AppColors.warning,
+                        ),
+                      ),
+                      const SizedBox(width: AppSizes.sm),
+                      Text(
+                        b.amount > 0 ? b.amount.toBRL : '—',
+                        style: AppTextStyles.labelSmall,
+                      ),
+                    ],
+                  ),
+                )),
+            if (state.pendingBills.length > 3) ...[
+              const SizedBox(height: AppSizes.xs),
+              Text(
+                '+${state.pendingBills.length - 3} outras contas',
+                style: AppTextStyles.labelSmall
+                    .copyWith(color: AppColors.textSecondary),
+              ),
+            ],
+            if (overdue.isNotEmpty) ...[
+              const SizedBox(height: AppSizes.xs),
+              Text(
+                '${overdue.length} vencida${overdue.length > 1 ? 's' : ''}  •  '
+                '${dueSoon.length} vencem em breve',
+                style: AppTextStyles.labelSmall
+                    .copyWith(color: AppColors.expense),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

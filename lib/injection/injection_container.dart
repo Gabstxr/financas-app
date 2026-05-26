@@ -49,6 +49,16 @@ import '../features/planning/domain/usecases/get_planning.dart';
 import '../features/planning/domain/usecases/save_planning.dart';
 import '../features/planning/presentation/cubit/planning_cubit.dart';
 
+import '../features/bills/data/datasources/bills_remote_datasource.dart';
+import '../features/bills/data/repositories/bills_repository_impl.dart';
+import '../features/bills/domain/repositories/bills_repository.dart';
+import '../features/bills/domain/usecases/add_bill.dart';
+import '../features/bills/domain/usecases/delete_bill.dart';
+import '../features/bills/domain/usecases/get_bills.dart';
+import '../features/bills/domain/usecases/mark_bill_paid.dart';
+import '../features/bills/domain/usecases/update_bill.dart';
+import '../features/bills/presentation/cubit/bills_cubit.dart';
+
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -140,6 +150,7 @@ Future<void> initDependencies() async {
         getTransactionsByMonth: sl(),
         getAccounts: sl(),
         getPlanning: sl(),
+        getBills: sl(),
       ));
   sl.registerFactory(() => ReportsCubit(
         getTransactionsByMonth: sl(),
@@ -159,5 +170,25 @@ Future<void> initDependencies() async {
         savePlanning: sl(),
         getTransactionsByMonth: sl(),
         getCategories: sl(),
+      ));
+
+  // Bills
+  sl.registerLazySingleton<BillsRemoteDataSource>(
+    () => BillsRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<BillsRepository>(
+    () => BillsRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(() => GetBills(sl()));
+  sl.registerLazySingleton(() => AddBill(sl()));
+  sl.registerLazySingleton(() => UpdateBill(sl()));
+  sl.registerLazySingleton(() => DeleteBill(sl()));
+  sl.registerLazySingleton(() => MarkBillPaid(sl()));
+  sl.registerFactory(() => BillsCubit(
+        getBills: sl(),
+        addBill: sl(),
+        updateBill: sl(),
+        deleteBill: sl(),
+        markBillPaid: sl(),
       ));
 }

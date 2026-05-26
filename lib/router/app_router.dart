@@ -14,6 +14,7 @@ import '../features/accounts/presentation/pages/accounts_page.dart';
 import '../features/accounts/presentation/pages/add_account_page.dart';
 import '../features/categories/presentation/pages/categories_page.dart';
 import '../features/categories/presentation/pages/add_category_page.dart';
+import '../features/bills/presentation/pages/bills_page.dart';
 import '../features/planning/presentation/pages/planning_page.dart';
 import '../features/reports/presentation/pages/reports_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
@@ -37,6 +38,7 @@ abstract class AppRoutes {
   static const addCategory = '/add-category';
   static const reports = '/reports';
   static const planning = '/planning';
+  static const bills = '/bills';
   static const settings = '/settings';
 }
 
@@ -117,6 +119,10 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.addCategory,
           builder: (_, __) => const AddCategoryPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.bills,
+          builder: (_, __) => const BillsPage(),
         ),
       ],
     );

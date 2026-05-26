@@ -13,12 +13,14 @@ class DashboardLoaded extends DashboardState {
   final List<AccountEntity> accounts;
   final List<TransactionEntity> transactions;
   final PlanningEntity? planning;
+  final List<BillEntity> bills;
   final DateTime currentMonth;
 
   const DashboardLoaded({
     required this.accounts,
     required this.transactions,
     this.planning,
+    this.bills = const [],
     required this.currentMonth,
   });
 
@@ -44,8 +46,11 @@ class DashboardLoaded extends DashboardState {
 
   List<TransactionEntity> get recentTransactions => transactions.take(5).toList();
 
+  List<BillEntity> get pendingBills =>
+      bills.where((b) => !b.isPaid && (b.isOverdue || b.isDueSoon)).toList();
+
   @override
-  List<Object?> get props => [accounts, transactions, planning, currentMonth];
+  List<Object?> get props => [accounts, transactions, planning, bills, currentMonth];
 }
 
 class DashboardError extends DashboardState {

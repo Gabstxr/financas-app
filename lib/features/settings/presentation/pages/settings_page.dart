@@ -39,6 +39,12 @@ class SettingsPage extends StatelessWidget {
               onTap: () => context.push(AppRoutes.categories),
             ),
             _SettingsTile(
+              icon: Icons.receipt_long_outlined,
+              title: 'Contas a Pagar',
+              subtitle: 'Gerencie vencimentos recorrentes',
+              onTap: () => context.push(AppRoutes.bills),
+            ),
+            _SettingsTile(
               icon: Icons.calculate_outlined,
               title: 'Recalcular saldos',
               subtitle: 'Corrige saldos baseado em todas as transações',
