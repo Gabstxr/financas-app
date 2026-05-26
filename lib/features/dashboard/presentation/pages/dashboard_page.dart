@@ -31,14 +31,14 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     _dashboardCubit = sl<DashboardCubit>();
     final authState = context.read<AuthBloc>().state;
-    if (authState is AuthAuthenticated) {
+    if (authState is AuthAuthenticated &&
+        _dashboardCubit.state is! DashboardLoaded) {
       _dashboardCubit.load(authState.user.uid);
     }
   }
 
   @override
   void dispose() {
-    _dashboardCubit.close();
     super.dispose();
   }
 

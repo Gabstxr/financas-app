@@ -4,8 +4,14 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_strings.dart';
+import '../features/accounts/presentation/bloc/accounts_bloc.dart';
+import '../features/auth/presentation/bloc/auth_bloc.dart';
+import '../features/dashboard/presentation/bloc/dashboard_cubit.dart';
+import '../injection/injection_container.dart';
 import 'app_router.dart';
 
 class MainScaffold extends StatefulWidget {
@@ -102,11 +108,25 @@ class _MainScaffoldState extends State<MainScaffold> {
       ),
       floatingActionButton: currentIndex <= 1
           ? FloatingActionButton(
-              onPressed: () => context.push(AppRoutes.addTransaction),
+              onPressed: () async {
+                await context.push(AppRoutes.addTransaction);
+                if (!context.mounted) return;
+                final auth = context.read<AuthBloc>().state;
+                if (auth is AuthAuthenticated) {
+                  final month = sl<DashboardCubit>().state is DashboardLoaded
+                      ? (sl<DashboardCubit>().state as DashboardLoaded)
+                          .currentMonth
+                      : null;
+                  sl<DashboardCubit>().load(auth.user.uid, month: month);
+                  context.read<AccountsBloc>().add(
+                        AccountsLoadRequested(auth.user.uid),
+                      );
+                }
+              },
               child: const Icon(Icons.add, size: 28),
             )
           : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: AppColors.surface,

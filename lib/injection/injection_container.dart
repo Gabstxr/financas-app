@@ -90,7 +90,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => AddAccount(sl()));
   sl.registerLazySingleton(() => UpdateAccount(sl()));
   sl.registerLazySingleton(() => DeleteAccount(sl()));
-  sl.registerFactory(() => AccountsBloc(
+  sl.registerLazySingleton(() => AccountsBloc(
         getAccounts: sl(),
         addAccount: sl(),
         updateAccount: sl(),
@@ -129,10 +129,11 @@ Future<void> initDependencies() async {
         addTransaction: sl(),
         updateTransaction: sl(),
         deleteTransaction: sl(),
+        accountsBloc: sl(),
       ));
 
   // Dashboard & Reports
-  sl.registerFactory(() => DashboardCubit(
+  sl.registerLazySingleton(() => DashboardCubit(
         getTransactionsByMonth: sl(),
         getAccounts: sl(),
       ));

@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import '../../../accounts/presentation/bloc/accounts_bloc.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/usecases/add_transaction.dart';
 import '../../domain/usecases/delete_transaction.dart';
@@ -14,12 +15,14 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
   final AddTransaction addTransaction;
   final UpdateTransaction updateTransaction;
   final DeleteTransaction deleteTransaction;
+  final AccountsBloc accountsBloc;
 
   TransactionsBloc({
     required this.getTransactionsByMonth,
     required this.addTransaction,
     required this.updateTransaction,
     required this.deleteTransaction,
+    required this.accountsBloc,
   }) : super(TransactionsInitial()) {
     on<TransactionsLoadRequested>(_onLoad);
     on<TransactionsAddRequested>(_onAdd);
@@ -41,19 +44,21 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
   }
 
   Future<void> _onAdd(TransactionsAddRequested event, Emitter<TransactionsState> emit) async {
-    if (state is! TransactionsLoaded) return;
-    final current = state as TransactionsLoaded;
-
     final result = await addTransaction(event.transaction);
     result.fold(
       (failure) => emit(TransactionsError(failure.message)),
       (transaction) {
-        final sameMonth = transaction.date.year == current.year &&
-            transaction.date.month == current.month;
-        if (sameMonth) {
-          final updated = [transaction, ...current.transactions];
-          updated.sort((a, b) => b.date.compareTo(a.date));
-          emit(current.copyWith(transactions: updated));
+        accountsBloc.add(AccountsLoadRequested(transaction.userId));
+
+        if (state is TransactionsLoaded) {
+          final current = state as TransactionsLoaded;
+          final sameMonth = transaction.date.year == current.year &&
+              transaction.date.month == current.month;
+          if (sameMonth) {
+            final updated = [transaction, ...current.transactions];
+            updated.sort((a, b) => b.date.compareTo(a.date));
+            emit(current.copyWith(transactions: updated));
+          }
         }
       },
     );

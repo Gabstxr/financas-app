@@ -42,11 +42,31 @@ class TransactionsRemoteDataSourceImpl implements TransactionsRemoteDataSource {
     }
   }
 
+  DocumentReference _accountDoc(String userId, String accountId) => _firestore
+      .collection('users')
+      .doc(userId)
+      .collection('accounts')
+      .doc(accountId);
+
   @override
   Future<TransactionModel> addTransaction(TransactionModel transaction) async {
     try {
-      final docRef = await _collection(transaction.userId).add(transaction.toFirestore());
-      final doc = await docRef.get();
+      final batch = _firestore.batch();
+
+      final txRef = _collection(transaction.userId).doc();
+      batch.set(txRef, transaction.toFirestore());
+
+      if (!transaction.isTransfer) {
+        final delta =
+            transaction.isIncome ? transaction.amount : -transaction.amount;
+        batch.update(
+          _accountDoc(transaction.userId, transaction.accountId),
+          {'balance': FieldValue.increment(delta)},
+        );
+      }
+
+      await batch.commit();
+      final doc = await txRef.get();
       return TransactionModel.fromFirestore(doc, transaction.userId);
     } catch (_) {
       throw const ServerException();

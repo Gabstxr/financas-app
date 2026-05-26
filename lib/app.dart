@@ -52,7 +52,6 @@ class _AppState extends State<App> {
   void dispose() {
     _authSub?.cancel();
     _authBloc.close();
-    _accountsBloc.close();
     _categoriesBloc.close();
     _transactionsBloc.close();
     super.dispose();
