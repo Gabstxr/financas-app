@@ -178,7 +178,7 @@ class _PlanningSetupPageState extends State<PlanningSetupPage> {
               style: AppTextStyles.bodySmall,
             ),
             const SizedBox(height: AppSizes.sm),
-            ...widget.categories.map((cat) => _buildCategoryLimitRow(cat)),
+            _buildCategoryLimitsByPillar(),
             const SizedBox(height: AppSizes.xl),
             AppButton(
               label: 'Salvar plano',
@@ -314,6 +314,47 @@ class _PlanningSetupPageState extends State<PlanningSetupPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildCategoryLimitsByPillar() {
+    final grouped = PlanningEngine.groupByPillar(widget.categories);
+    final budget = _spendingBudget;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final pillar in KakeiboPillar.values) ...[
+          if ((grouped[pillar] ?? []).isNotEmpty) ...[
+            _buildPillarHeader(pillar, budget),
+            ...grouped[pillar]!.map((cat) => _buildCategoryLimitRow(cat)),
+            const SizedBox(height: AppSizes.sm),
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPillarHeader(KakeiboPillar pillar, int budget) {
+    final pillarBudget =
+        budget > 0 ? (budget * pillar.suggestedPercent).round() : 0;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSizes.xs),
+      child: Row(
+        children: [
+          Icon(pillar.icon, color: pillar.color, size: 15),
+          const SizedBox(width: AppSizes.xs),
+          Text(pillar.label,
+              style: AppTextStyles.labelMedium.copyWith(color: pillar.color)),
+          const Spacer(),
+          if (budget > 0)
+            Text(
+              '${(pillar.suggestedPercent * 100).round()}%  •  ${pillarBudget.toBRL}',
+              style: AppTextStyles.labelSmall
+                  .copyWith(color: AppColors.textSecondary),
+            ),
+        ],
+      ),
     );
   }
 

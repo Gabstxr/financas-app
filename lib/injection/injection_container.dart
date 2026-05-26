@@ -136,6 +136,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => DashboardCubit(
         getTransactionsByMonth: sl(),
         getAccounts: sl(),
+        getPlanning: sl(),
       ));
   sl.registerFactory(() => ReportsCubit(
         getTransactionsByMonth: sl(),

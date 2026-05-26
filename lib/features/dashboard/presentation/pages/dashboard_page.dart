@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/extensions/currency_extension.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/loading_overlay.dart';
 import '../../../../injection/injection_container.dart';
@@ -143,6 +144,13 @@ class _DashboardPageState extends State<DashboardPage> {
             expenses: state.monthlyExpenses,
           ),
         ),
+        if (state.planning != null) ...[
+          const SizedBox(height: AppSizes.md),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+            child: _HealthCard(state: state),
+          ),
+        ],
         const SizedBox(height: AppSizes.lg),
         if (state.recentTransactions.isNotEmpty) ...[
           Padding(
@@ -190,6 +198,85 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         const SizedBox(height: 100),
       ],
+    );
+  }
+}
+
+class _HealthCard extends StatelessWidget {
+  final DashboardLoaded state;
+  const _HealthCard({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final plan = state.planning!;
+    final spent = state.monthlyExpenses;
+    final budget = plan.spendingBudget;
+    final progress = budget > 0 ? (spent / budget).clamp(0.0, 1.0) : 0.0;
+    final remaining = (budget - spent).clamp(0, double.maxFinite).toInt();
+    final isOver = spent > budget;
+    final barColor = isOver
+        ? AppColors.expense
+        : progress >= 0.8
+            ? AppColors.warning
+            : AppColors.income;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.md),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.favorite_outline_rounded,
+                  color: barColor, size: 18),
+              const SizedBox(width: AppSizes.xs),
+              Text('Saúde financeira', style: AppTextStyles.labelMedium),
+              const Spacer(),
+              TextButton(
+                onPressed: () => context.go(AppRoutes.planning),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: AppColors.primaryLight,
+                ),
+                child: const Text('Ver plano'),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: AppColors.divider,
+              color: barColor,
+            ),
+          ),
+          const SizedBox(height: AppSizes.xs),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                isOver
+                    ? 'Orçamento estourado em ${(spent - budget).toBRL}'
+                    : '${remaining.toBRL} restante',
+                style: AppTextStyles.labelSmall.copyWith(color: barColor),
+              ),
+              Text(
+                '${spent.toBRL} / ${budget.toBRL}',
+                style: AppTextStyles.labelSmall,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
