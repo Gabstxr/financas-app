@@ -22,6 +22,7 @@ class TransactionModel extends TransactionEntity {
     super.categoryIcon,
     super.categoryColor,
     super.accountName,
+    super.toAccountName,
   });
 
   factory TransactionModel.fromFirestore(DocumentSnapshot doc, String userId) {
@@ -46,6 +47,7 @@ class TransactionModel extends TransactionEntity {
       categoryIcon: data['categoryIcon'] as String?,
       categoryColor: data['categoryColor'] as String?,
       accountName: data['accountName'] as String?,
+      toAccountName: data['toAccountName'] as String?,
     );
   }
 
@@ -66,6 +68,7 @@ class TransactionModel extends TransactionEntity {
       'categoryIcon': categoryIcon,
       'categoryColor': categoryColor,
       'accountName': accountName,
+      'toAccountName': toAccountName,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': FieldValue.serverTimestamp(),
     };

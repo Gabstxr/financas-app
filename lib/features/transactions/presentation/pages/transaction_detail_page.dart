@@ -21,7 +21,11 @@ class TransactionDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = transaction.isIncome ? AppColors.income : AppColors.expense;
+    final color = transaction.isTransfer
+        ? AppColors.primaryLight
+        : transaction.isIncome
+            ? AppColors.income
+            : AppColors.expense;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -72,7 +76,11 @@ class TransactionDetailPage extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              transaction.isIncome ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
+              transaction.isTransfer
+                  ? Icons.swap_horiz_rounded
+                  : transaction.isIncome
+                      ? Icons.arrow_downward_rounded
+                      : Icons.arrow_upward_rounded,
               color: color,
               size: 28,
             ),
@@ -103,17 +111,27 @@ class TransactionDetailPage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _DetailRow(
-            icon: Icons.category_outlined,
-            label: AppStrings.category,
-            value: transaction.categoryName ?? '-',
-          ),
-          const Divider(color: AppColors.divider, height: 1),
+          if (!transaction.isTransfer) ...[
+            _DetailRow(
+              icon: Icons.category_outlined,
+              label: AppStrings.category,
+              value: transaction.categoryName ?? '-',
+            ),
+            const Divider(color: AppColors.divider, height: 1),
+          ],
           _DetailRow(
             icon: Icons.account_balance_wallet_outlined,
-            label: AppStrings.account,
+            label: transaction.isTransfer ? 'Conta de origem' : AppStrings.account,
             value: transaction.accountName ?? '-',
           ),
+          if (transaction.isTransfer) ...[
+            const Divider(color: AppColors.divider, height: 1),
+            _DetailRow(
+              icon: Icons.south_west_rounded,
+              label: 'Conta de destino',
+              value: transaction.toAccountName ?? transaction.toAccountId ?? '-',
+            ),
+          ],
           if (transaction.notes != null && transaction.notes!.isNotEmpty) ...[
             const Divider(color: AppColors.divider, height: 1),
             _DetailRow(

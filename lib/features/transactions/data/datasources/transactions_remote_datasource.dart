@@ -56,7 +56,16 @@ class TransactionsRemoteDataSourceImpl implements TransactionsRemoteDataSource {
       final txRef = _collection(transaction.userId).doc();
       batch.set(txRef, transaction.toFirestore());
 
-      if (!transaction.isTransfer) {
+      if (transaction.isTransfer && transaction.toAccountId != null) {
+        batch.update(
+          _accountDoc(transaction.userId, transaction.accountId),
+          {'balance': FieldValue.increment(-transaction.amount)},
+        );
+        batch.update(
+          _accountDoc(transaction.userId, transaction.toAccountId!),
+          {'balance': FieldValue.increment(transaction.amount)},
+        );
+      } else if (!transaction.isTransfer) {
         final delta =
             transaction.isIncome ? transaction.amount : -transaction.amount;
         batch.update(
@@ -86,7 +95,17 @@ class TransactionsRemoteDataSourceImpl implements TransactionsRemoteDataSource {
         newTransaction.toFirestore(),
       );
 
-      if (!oldTransaction.isTransfer) {
+      // Reverse old balance effects
+      if (oldTransaction.isTransfer && oldTransaction.toAccountId != null) {
+        batch.update(
+          _accountDoc(oldTransaction.userId, oldTransaction.accountId),
+          {'balance': FieldValue.increment(oldTransaction.amount)},
+        );
+        batch.update(
+          _accountDoc(oldTransaction.userId, oldTransaction.toAccountId!),
+          {'balance': FieldValue.increment(-oldTransaction.amount)},
+        );
+      } else if (!oldTransaction.isTransfer) {
         final reverseDelta =
             oldTransaction.isIncome ? -oldTransaction.amount : oldTransaction.amount;
         batch.update(
@@ -95,7 +114,17 @@ class TransactionsRemoteDataSourceImpl implements TransactionsRemoteDataSource {
         );
       }
 
-      if (!newTransaction.isTransfer) {
+      // Apply new balance effects
+      if (newTransaction.isTransfer && newTransaction.toAccountId != null) {
+        batch.update(
+          _accountDoc(newTransaction.userId, newTransaction.accountId),
+          {'balance': FieldValue.increment(-newTransaction.amount)},
+        );
+        batch.update(
+          _accountDoc(newTransaction.userId, newTransaction.toAccountId!),
+          {'balance': FieldValue.increment(newTransaction.amount)},
+        );
+      } else if (!newTransaction.isTransfer) {
         final applyDelta =
             newTransaction.isIncome ? newTransaction.amount : -newTransaction.amount;
         batch.update(
@@ -123,7 +152,16 @@ class TransactionsRemoteDataSourceImpl implements TransactionsRemoteDataSource {
         {'isDeleted': true, 'updatedAt': FieldValue.serverTimestamp()},
       );
 
-      if (!transaction.isTransfer) {
+      if (transaction.isTransfer && transaction.toAccountId != null) {
+        batch.update(
+          _accountDoc(transaction.userId, transaction.accountId),
+          {'balance': FieldValue.increment(transaction.amount)},
+        );
+        batch.update(
+          _accountDoc(transaction.userId, transaction.toAccountId!),
+          {'balance': FieldValue.increment(-transaction.amount)},
+        );
+      } else if (!transaction.isTransfer) {
         final reverseDelta =
             transaction.isIncome ? -transaction.amount : transaction.amount;
         batch.update(

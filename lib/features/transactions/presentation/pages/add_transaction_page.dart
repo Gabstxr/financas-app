@@ -38,6 +38,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
 
   CategoryEntity? _selectedCategory;
   AccountEntity? _selectedAccount;
+  AccountEntity? _selectedToAccount;
   DateTime _selectedDate = DateTime.now();
   bool _isEditing = false;
 
@@ -45,20 +46,38 @@ class _AddTransactionPageState extends State<AddTransactionPage>
   void initState() {
     super.initState();
     _isEditing = widget.transaction != null;
-    _tabController = TabController(
-      length: 2,
-      vsync: this,
-      initialIndex: widget.transaction?.isIncome == true ? 0 : 1,
-    );
+    final initIndex = widget.transaction?.isIncome == true
+        ? 0
+        : widget.transaction?.isTransfer == true
+            ? 2
+            : 1;
+    _tabController = TabController(length: 3, vsync: this, initialIndex: initIndex);
     if (_isEditing) _prefillForm();
   }
 
   void _prefillForm() {
     final t = widget.transaction!;
-    _descriptionController.text = t.description;
+    _descriptionController.text = t.description == 'Transferência' ? '' : t.description;
     _amountController.text = t.amount.toReaisFormatted;
     _notesController.text = t.notes ?? '';
     _selectedDate = t.date;
+
+    // Pré-seleciona contas ao editar
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final accountsState = context.read<AccountsBloc>().state;
+      if (accountsState is AccountsLoaded) {
+        setState(() {
+          _selectedAccount = accountsState.accounts
+              .where((a) => a.id == t.accountId)
+              .firstOrNull;
+          if (t.isTransfer && t.toAccountId != null) {
+            _selectedToAccount = accountsState.accounts
+                .where((a) => a.id == t.toAccountId)
+                .firstOrNull;
+          }
+        });
+      }
+    });
   }
 
   @override
@@ -70,17 +89,36 @@ class _AddTransactionPageState extends State<AddTransactionPage>
     super.dispose();
   }
 
-  FullTransactionType get _currentType =>
-      _tabController.index == 0 ? FullTransactionType.income : FullTransactionType.expense;
+  FullTransactionType get _currentType {
+    switch (_tabController.index) {
+      case 0:
+        return FullTransactionType.income;
+      case 2:
+        return FullTransactionType.transfer;
+      default:
+        return FullTransactionType.expense;
+    }
+  }
+
+  bool get _isTransfer => _currentType == FullTransactionType.transfer;
 
   void _submit(BuildContext context) {
     if (_formKey.currentState?.validate() == false) return;
-    if (_selectedCategory == null) {
+
+    if (!_isTransfer && _selectedCategory == null) {
       _showError(context, 'Selecione uma categoria.');
       return;
     }
     if (_selectedAccount == null) {
-      _showError(context, 'Selecione uma conta.');
+      _showError(context, _isTransfer ? 'Selecione a conta de origem.' : 'Selecione uma conta.');
+      return;
+    }
+    if (_isTransfer && _selectedToAccount == null) {
+      _showError(context, 'Selecione a conta de destino.');
+      return;
+    }
+    if (_isTransfer && _selectedAccount!.id == _selectedToAccount!.id) {
+      _showError(context, 'Conta de origem e destino não podem ser iguais.');
       return;
     }
 
@@ -95,17 +133,21 @@ class _AddTransactionPageState extends State<AddTransactionPage>
       userId: authState.user.uid,
       type: _currentType,
       amount: amount,
-      description: _descriptionController.text.trim(),
-      categoryId: _selectedCategory!.id,
+      description: _descriptionController.text.trim().isEmpty && _isTransfer
+          ? 'Transferência'
+          : _descriptionController.text.trim(),
+      categoryId: _isTransfer ? 'transfer' : _selectedCategory!.id,
       accountId: _selectedAccount!.id,
+      toAccountId: _isTransfer ? _selectedToAccount!.id : null,
       date: _selectedDate,
       notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
       createdAt: widget.transaction?.createdAt ?? now,
       updatedAt: now,
-      categoryName: _selectedCategory!.name,
-      categoryIcon: _selectedCategory!.icon,
-      categoryColor: _selectedCategory!.color,
+      categoryName: _isTransfer ? null : _selectedCategory!.name,
+      categoryIcon: _isTransfer ? null : _selectedCategory!.icon,
+      categoryColor: _isTransfer ? null : _selectedCategory!.color,
       accountName: _selectedAccount!.name,
+      toAccountName: _isTransfer ? _selectedToAccount!.name : null,
     );
 
     if (_isEditing) {
@@ -128,26 +170,27 @@ class _AddTransactionPageState extends State<AddTransactionPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: Text(_isEditing ? AppStrings.editTransaction : AppStrings.addTransaction),
-          leading: IconButton(
-            icon: const Icon(Icons.close_rounded),
-            onPressed: () => context.pop(),
-          ),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text(_isEditing ? AppStrings.editTransaction : AppStrings.addTransaction),
+        leading: IconButton(
+          icon: const Icon(Icons.close_rounded),
+          onPressed: () => context.pop(),
         ),
-        body: Column(
-          children: [
-            _buildTypeTab(),
-            Expanded(
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSizes.md),
-                  child: Column(
-                    children: [
-                      _buildAmountField(),
-                      const SizedBox(height: AppSizes.md),
+      ),
+      body: Column(
+        children: [
+          _buildTypeTab(),
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSizes.md),
+                child: Column(
+                  children: [
+                    _buildAmountField(),
+                    const SizedBox(height: AppSizes.md),
+                    if (!_isTransfer) ...[
                       AppTextField(
                         label: AppStrings.description,
                         controller: _descriptionController,
@@ -159,10 +202,24 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                       const SizedBox(height: AppSizes.md),
                       _buildCategorySelector(context),
                       const SizedBox(height: AppSizes.md),
-                      _buildAccountSelector(context),
+                      _buildAccountSelector(context, label: AppStrings.account),
+                    ] else ...[
+                      AppTextField(
+                        label: 'Descrição (opcional)',
+                        controller: _descriptionController,
+                        prefixIcon: Icons.description_outlined,
+                        textCapitalization: TextCapitalization.sentences,
+                        textInputAction: TextInputAction.next,
+                      ),
                       const SizedBox(height: AppSizes.md),
-                      _buildDateSelector(context),
+                      _buildAccountSelector(context, label: 'Conta de origem'),
                       const SizedBox(height: AppSizes.md),
+                      _buildToAccountSelector(context),
+                    ],
+                    const SizedBox(height: AppSizes.md),
+                    _buildDateSelector(context),
+                    const SizedBox(height: AppSizes.md),
+                    if (!_isTransfer)
                       AppTextField(
                         label: 'Observações (opcional)',
                         controller: _notesController,
@@ -170,19 +227,19 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                         maxLines: 2,
                         textCapitalization: TextCapitalization.sentences,
                       ),
-                      const SizedBox(height: AppSizes.xl),
-                      AppButton(
-                        label: _isEditing ? AppStrings.save : 'Adicionar',
-                        onPressed: () => _submit(context),
-                      ),
-                      const SizedBox(height: AppSizes.md),
-                    ],
-                  ),
+                    const SizedBox(height: AppSizes.xl),
+                    AppButton(
+                      label: _isEditing ? AppStrings.save : 'Adicionar',
+                      onPressed: () => _submit(context),
+                    ),
+                    const SizedBox(height: AppSizes.md),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -207,6 +264,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
         tabs: const [
           Tab(text: 'Receita'),
           Tab(text: 'Despesa'),
+          Tab(text: 'Transferência'),
         ],
         onTap: (_) => setState(() {}),
       ),
@@ -214,9 +272,11 @@ class _AddTransactionPageState extends State<AddTransactionPage>
   }
 
   Widget _buildAmountField() {
-    final color = _currentType == FullTransactionType.income
-        ? AppColors.income
-        : AppColors.expense;
+    final color = _isTransfer
+        ? AppColors.primaryLight
+        : _currentType == FullTransactionType.income
+            ? AppColors.income
+            : AppColors.expense;
     return Container(
       padding: const EdgeInsets.all(AppSizes.lg),
       decoration: BoxDecoration(
@@ -278,7 +338,8 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                             .copyWith(color: AppColors.textDisabled),
                   ),
                 ),
-                const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+                const Icon(Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary),
               ],
             ),
           ),
@@ -287,43 +348,96 @@ class _AddTransactionPageState extends State<AddTransactionPage>
     );
   }
 
-  Widget _buildAccountSelector(BuildContext context) {
+  Widget _buildAccountSelector(BuildContext context, {required String label}) {
     return BlocBuilder<AccountsBloc, AccountsState>(
       builder: (context, state) {
         final accounts =
             state is AccountsLoaded ? state.accounts : <AccountEntity>[];
+        return _accountPickerTile(
+          label: label,
+          selected: _selectedAccount,
+          icon: Icons.account_balance_wallet_outlined,
+          onTap: () => _showAccountPicker(
+            context,
+            accounts,
+            onSelected: (a) => setState(() => _selectedAccount = a),
+            excludeId: _selectedToAccount?.id,
+          ),
+        );
+      },
+    );
+  }
 
-        return InkWell(
-          onTap: () => _showAccountPicker(context, accounts),
+  Widget _buildToAccountSelector(BuildContext context) {
+    return BlocBuilder<AccountsBloc, AccountsState>(
+      builder: (context, state) {
+        final accounts =
+            state is AccountsLoaded ? state.accounts : <AccountEntity>[];
+        return _accountPickerTile(
+          label: 'Conta de destino',
+          selected: _selectedToAccount,
+          icon: Icons.south_west_rounded,
+          onTap: () => _showAccountPicker(
+            context,
+            accounts,
+            onSelected: (a) => setState(() => _selectedToAccount = a),
+            excludeId: _selectedAccount?.id,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _accountPickerTile({
+    required String label,
+    required AccountEntity? selected,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.md, vertical: AppSizes.md),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.md, vertical: AppSizes.md),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.account_balance_wallet_outlined,
-                    color: AppColors.textSecondary),
-                const SizedBox(width: AppSizes.sm),
-                Expanded(
-                  child: Text(
-                    _selectedAccount?.name ?? AppStrings.account,
-                    style: _selectedAccount != null
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.textSecondary),
+            const SizedBox(width: AppSizes.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label,
+                      style:
+                          AppTextStyles.labelSmall.copyWith(color: AppColors.textSecondary)),
+                  const SizedBox(height: 2),
+                  Text(
+                    selected?.name ?? 'Selecionar conta',
+                    style: selected != null
                         ? AppTextStyles.bodyLarge
                         : AppTextStyles.bodyLarge
                             .copyWith(color: AppColors.textDisabled),
                   ),
-                ),
-                const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      },
+            if (selected != null) ...[
+              Text(selected.balance.toBRL,
+                  style: AppTextStyles.labelSmall
+                      .copyWith(color: AppColors.textSecondary)),
+              const SizedBox(width: AppSizes.xs),
+            ],
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textSecondary),
+          ],
+        ),
+      ),
     );
   }
 
@@ -357,7 +471,8 @@ class _AddTransactionPageState extends State<AddTransactionPage>
         ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today_outlined, color: AppColors.textSecondary),
+            const Icon(Icons.calendar_today_outlined,
+                color: AppColors.textSecondary),
             const SizedBox(width: AppSizes.sm),
             Expanded(
               child: Text(
@@ -365,14 +480,16 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                 style: AppTextStyles.bodyLarge,
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textSecondary),
           ],
         ),
       ),
     );
   }
 
-  void _showCategoryPicker(BuildContext context, List<CategoryEntity> categories) {
+  void _showCategoryPicker(
+      BuildContext context, List<CategoryEntity> categories) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
@@ -387,7 +504,8 @@ class _AddTransactionPageState extends State<AddTransactionPage>
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
-              child: Text('Selecionar categoria', style: AppTextStyles.headlineSmall),
+              child:
+                  Text('Selecionar categoria', style: AppTextStyles.headlineSmall),
             ),
             const Divider(color: AppColors.divider),
             Flexible(
@@ -423,7 +541,14 @@ class _AddTransactionPageState extends State<AddTransactionPage>
     );
   }
 
-  void _showAccountPicker(BuildContext context, List<AccountEntity> accounts) {
+  void _showAccountPicker(
+    BuildContext context,
+    List<AccountEntity> accounts, {
+    required ValueChanged<AccountEntity> onSelected,
+    String? excludeId,
+  }) {
+    final filtered =
+        accounts.where((a) => a.id != excludeId).toList();
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
@@ -441,16 +566,14 @@ class _AddTransactionPageState extends State<AddTransactionPage>
               child: Text('Selecionar conta', style: AppTextStyles.headlineSmall),
             ),
             const Divider(color: AppColors.divider),
-            ...accounts.map((acc) => ListTile(
+            ...filtered.map((acc) => ListTile(
                   leading: const Icon(Icons.account_balance_wallet_outlined),
                   title: Text(acc.name),
                   subtitle: Text(acc.balance.toBRL),
                   onTap: () {
-                    setState(() => _selectedAccount = acc);
+                    onSelected(acc);
                     Navigator.pop(context);
                   },
-                  selected: _selectedAccount?.id == acc.id,
-                  selectedTileColor: AppColors.primaryContainer,
                 )),
           ],
         ),

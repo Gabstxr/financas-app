@@ -34,6 +34,7 @@ class TransactionEntity extends Equatable {
   final String? categoryIcon;
   final String? categoryColor;
   final String? accountName;
+  final String? toAccountName;
 
   const TransactionEntity({
     required this.id,
@@ -55,6 +56,7 @@ class TransactionEntity extends Equatable {
     this.categoryIcon,
     this.categoryColor,
     this.accountName,
+    this.toAccountName,
   });
 
   TransactionEntity copyWith({
@@ -77,6 +79,7 @@ class TransactionEntity extends Equatable {
     String? categoryIcon,
     String? categoryColor,
     String? accountName,
+    String? toAccountName,
   }) {
     return TransactionEntity(
       id: id ?? this.id,
@@ -98,6 +101,7 @@ class TransactionEntity extends Equatable {
       categoryIcon: categoryIcon ?? this.categoryIcon,
       categoryColor: categoryColor ?? this.categoryColor,
       accountName: accountName ?? this.accountName,
+      toAccountName: toAccountName ?? this.toAccountName,
     );
   }
 

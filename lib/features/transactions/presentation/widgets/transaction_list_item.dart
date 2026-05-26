@@ -18,6 +18,8 @@ class TransactionListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (transaction.isTransfer) return _buildTransferTile();
+
     final color = transaction.isIncome ? AppColors.income : AppColors.expense;
     final sign = transaction.isIncome ? '+' : '-';
     final categoryColor = transaction.categoryColor != null
@@ -35,7 +37,7 @@ class TransactionListItem extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: categoryColor.withOpacity(0.15),
+                color: categoryColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppSizes.radiusMd),
               ),
               child: Icon(Icons.circle, color: categoryColor, size: 16),
@@ -75,6 +77,64 @@ class TransactionListItem extends StatelessWidget {
             Text(
               '$sign${transaction.amount.toBRL}',
               style: AppTextStyles.amountSmall.copyWith(color: color),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransferTile() {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.md, vertical: AppSizes.sm + 2),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              ),
+              child: const Icon(Icons.swap_horiz_rounded,
+                  color: AppColors.primaryLight, size: 22),
+            ),
+            const SizedBox(width: AppSizes.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    transaction.description.isNotEmpty
+                        ? transaction.description
+                        : 'Transferência',
+                    style: AppTextStyles.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      if (transaction.accountName != null)
+                        Text(transaction.accountName!,
+                            style: AppTextStyles.labelSmall),
+                      const Text(' → ', style: AppTextStyles.labelSmall),
+                      Text(
+                        transaction.date.toRelative,
+                        style: AppTextStyles.labelSmall,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              transaction.amount.toBRL,
+              style: AppTextStyles.amountSmall
+                  .copyWith(color: AppColors.primaryLight),
             ),
           ],
         ),
