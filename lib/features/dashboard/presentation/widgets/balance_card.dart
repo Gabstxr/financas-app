@@ -31,7 +31,7 @@ class _BalanceCardState extends State<BalanceCard> {
         borderRadius: BorderRadius.circular(AppSizes.radiusXl),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -46,14 +46,14 @@ class _BalanceCardState extends State<BalanceCard> {
               Text(
                 AppStrings.totalBalance,
                 style: AppTextStyles.labelMedium.copyWith(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                 ),
               ),
               GestureDetector(
                 onTap: () => setState(() => _isVisible = !_isVisible),
                 child: Icon(
                   _isVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   size: 20,
                 ),
               ),

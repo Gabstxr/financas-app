@@ -4,13 +4,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/extensions/currency_extension.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../injection/injection_container.dart';
 import '../../../accounts/domain/entities/account_entity.dart';
 import '../../../accounts/domain/usecases/add_account.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../categories/data/datasources/categories_remote_datasource.dart';
 
@@ -25,6 +28,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final _formKey = GlobalKey<FormState>();
   final _accountNameController = TextEditingController();
   final _balanceController = TextEditingController();
+  final _salaryController = TextEditingController();
   AccountType _selectedType = AccountType.checking;
   bool _isLoading = false;
 
@@ -32,6 +36,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   void dispose() {
     _accountNameController.dispose();
     _balanceController.dispose();
+    _salaryController.dispose();
     super.dispose();
   }
 
@@ -45,9 +50,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
     final userId = authState.user.uid;
     final balance = _balanceController.text.isNotEmpty
-        ? int.tryParse(
-                _balanceController.text.replaceAll(RegExp(r'[^0-9]'), '')) ??
-            0
+        ? _balanceController.text.parseToCents
+        : 0;
+    final salary = _salaryController.text.isNotEmpty
+        ? _salaryController.text.parseToCents
         : 0;
 
     final account = AccountEntity(
@@ -65,6 +71,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
     try {
       await sl<AddAccount>().call(account);
       await sl<CategoriesRemoteDataSource>().seedDefaultCategories(userId);
+      if (salary > 0) {
+        await sl<AuthRepository>().updateSalary(userId, salary);
+      }
     } catch (e) {
       if (!context.mounted) return;
       setState(() => _isLoading = false);
@@ -78,7 +87,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     // Dispara o evento — o router redirect navega para dashboard automaticamente
     // quando o BLoC emitir AuthAuthenticated(onboardingDone: true).
     // NÃO chamar context.go() aqui para evitar race condition com o redirect.
-    context.read<AuthBloc>().add(AuthOnboardingCompleted(userId));
+    context.read<AuthBloc>().add(AuthOnboardingCompleted(userId, salary: salary));
   }
 
   @override
@@ -141,6 +150,23 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   controller: _balanceController,
                   prefixIcon: Icons.attach_money_rounded,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [CurrencyInputFormatter()],
+                ),
+                const SizedBox(height: AppSizes.lg),
+                Text('Salário mensal (opcional)', style: AppTextStyles.titleMedium),
+                const SizedBox(height: AppSizes.xs),
+                Text(
+                  'Usado para calcular seu planejamento Kakeibo',
+                  style: AppTextStyles.bodySmall
+                      .copyWith(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: AppSizes.sm),
+                AppTextField(
+                  label: 'R\$ 0,00',
+                  controller: _salaryController,
+                  prefixIcon: Icons.work_outline_rounded,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [CurrencyInputFormatter()],
                 ),
                 const SizedBox(height: AppSizes.xxl),
                 AppButton(

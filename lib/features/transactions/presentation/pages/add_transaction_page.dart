@@ -217,9 +217,9 @@ class _AddTransactionPageState extends State<AddTransactionPage>
     return Container(
       padding: const EdgeInsets.all(AppSizes.lg),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: TextFormField(
         controller: _amountController,
@@ -231,7 +231,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
         decoration: InputDecoration(
           hintText: 'R\$ 0,00',
           hintStyle: AppTextStyles.amountLarge.copyWith(
-            color: color.withOpacity(0.4),
+            color: color.withValues(alpha: 0.4),
           ),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
@@ -397,7 +397,7 @@ class _AddTransactionPageState extends State<AddTransactionPage>
                     leading: CircleAvatar(
                       backgroundColor: Color(
                         int.parse(cat.color.replaceAll('#', '0xFF')),
-                      ).withOpacity(0.2),
+                      ).withValues(alpha: 0.2),
                       child: Icon(Icons.circle,
                           color: Color(
                               int.parse(cat.color.replaceAll('#', '0xFF'))),

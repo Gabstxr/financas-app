@@ -40,10 +40,11 @@ class AuthSignOutRequested extends AuthEvent {}
 
 class AuthOnboardingCompleted extends AuthEvent {
   final String userId;
-  const AuthOnboardingCompleted(this.userId);
+  final int salary;
+  const AuthOnboardingCompleted(this.userId, {this.salary = 0});
 
   @override
-  List<Object> get props => [userId];
+  List<Object> get props => [userId, salary];
 }
 
 class _AuthUserChanged extends AuthEvent {

@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import '../../../categories/domain/entities/category_entity.dart';
 
 enum FullTransactionType { income, expense, transfer }
 

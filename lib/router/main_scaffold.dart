@@ -45,7 +45,8 @@ class _MainScaffoldState extends State<MainScaffold> {
       String s when s.startsWith(AppRoutes.dashboard) => 0,
       String s when s.startsWith(AppRoutes.transactions) => 1,
       String s when s.startsWith(AppRoutes.reports) => 2,
-      String s when s.startsWith(AppRoutes.settings) => 3,
+      String s when s.startsWith(AppRoutes.planning) => 3,
+      String s when s.startsWith(AppRoutes.settings) => 4,
       _ => 0,
     };
   }
@@ -59,6 +60,8 @@ class _MainScaffoldState extends State<MainScaffold> {
       case 2:
         context.go(AppRoutes.reports);
       case 3:
+        context.go(AppRoutes.planning);
+      case 4:
         context.go(AppRoutes.settings);
     }
   }
@@ -97,7 +100,7 @@ class _MainScaffoldState extends State<MainScaffold> {
           Expanded(child: widget.child),
         ],
       ),
-      floatingActionButton: currentIndex < 2
+      floatingActionButton: currentIndex <= 1
           ? FloatingActionButton(
               onPressed: () => context.push(AppRoutes.addTransaction),
               child: const Icon(Icons.add, size: 28),
@@ -127,6 +130,11 @@ class _MainScaffoldState extends State<MainScaffold> {
               icon: Icon(Icons.bar_chart_outlined),
               activeIcon: Icon(Icons.bar_chart_rounded),
               label: AppStrings.reports,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.auto_graph_outlined),
+              activeIcon: Icon(Icons.auto_graph_rounded),
+              label: AppStrings.planning,
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.settings_outlined),

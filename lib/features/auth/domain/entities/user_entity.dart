@@ -6,6 +6,7 @@ class UserEntity extends Equatable {
   final String displayName;
   final String? photoURL;
   final bool onboardingDone;
+  final int salary; // centavos; 0 se não informado
   final DateTime createdAt;
 
   const UserEntity({
@@ -14,6 +15,7 @@ class UserEntity extends Equatable {
     required this.displayName,
     this.photoURL,
     required this.onboardingDone,
+    this.salary = 0,
     required this.createdAt,
   });
 
@@ -23,6 +25,7 @@ class UserEntity extends Equatable {
     String? displayName,
     String? photoURL,
     bool? onboardingDone,
+    int? salary,
     DateTime? createdAt,
   }) {
     return UserEntity(
@@ -31,10 +34,11 @@ class UserEntity extends Equatable {
       displayName: displayName ?? this.displayName,
       photoURL: photoURL ?? this.photoURL,
       onboardingDone: onboardingDone ?? this.onboardingDone,
+      salary: salary ?? this.salary,
       createdAt: createdAt ?? this.createdAt,
     );
   }
 
   @override
-  List<Object?> get props => [uid, email, displayName, photoURL, onboardingDone, createdAt];
+  List<Object?> get props => [uid, email, displayName, photoURL, onboardingDone, salary, createdAt];
 }

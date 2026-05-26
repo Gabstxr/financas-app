@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import '../../../accounts/domain/entities/account_entity.dart';
 
 enum TransactionType { income, expense }
 

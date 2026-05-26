@@ -8,6 +8,7 @@ class UserModel extends UserEntity {
     required super.displayName,
     super.photoURL,
     required super.onboardingDone,
+    super.salary,
     required super.createdAt,
   });
 
@@ -19,6 +20,7 @@ class UserModel extends UserEntity {
       displayName: data['displayName'] as String? ?? '',
       photoURL: data['photoURL'] as String?,
       onboardingDone: data['onboardingDone'] as bool? ?? false,
+      salary: (data['salary'] as num?)?.toInt() ?? 0,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -41,6 +43,7 @@ class UserModel extends UserEntity {
       displayName: entity.displayName,
       photoURL: entity.photoURL,
       onboardingDone: entity.onboardingDone,
+      salary: entity.salary,
       createdAt: entity.createdAt,
     );
   }

@@ -12,6 +12,7 @@ abstract class AuthRemoteDataSource {
   Future<UserModel> signUp(String email, String password, String name);
   Future<void> signOut();
   Future<void> completeOnboarding(String uid);
+  Future<void> updateSalary(String uid, int salary);
   UserModel? get currentUser;
 }
 
@@ -125,6 +126,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     });
   }
 
+  @override
+  Future<void> updateSalary(String uid, int salary) async {
+    await _firestore.collection('users').doc(uid).update({'salary': salary});
+  }
+
   Future<UserModel> _getUserFromFirestore(String uid) async {
     final doc = await _firestore.collection('users').doc(uid).get();
     if (!doc.exists) {
@@ -157,6 +163,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       'displayName': name,
       'photoURL': photoURL,
       'onboardingDone': false,
+      'salary': 0,
       'currency': 'BRL',
       'createdAt': FieldValue.serverTimestamp(),
     });

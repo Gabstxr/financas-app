@@ -41,6 +41,13 @@ import '../features/transactions/presentation/bloc/transactions_bloc.dart';
 import '../features/dashboard/presentation/bloc/dashboard_cubit.dart';
 import '../features/reports/presentation/bloc/reports_cubit.dart';
 
+import '../features/planning/data/datasources/planning_remote_datasource.dart';
+import '../features/planning/data/repositories/planning_repository_impl.dart';
+import '../features/planning/domain/repositories/planning_repository.dart';
+import '../features/planning/domain/usecases/get_planning.dart';
+import '../features/planning/domain/usecases/save_planning.dart';
+import '../features/planning/presentation/cubit/planning_cubit.dart';
+
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -131,5 +138,21 @@ Future<void> initDependencies() async {
       ));
   sl.registerFactory(() => ReportsCubit(
         getTransactionsByMonth: sl(),
+      ));
+
+  // Planning
+  sl.registerLazySingleton<PlanningRemoteDataSource>(
+    () => PlanningRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<PlanningRepository>(
+    () => PlanningRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(() => GetPlanning(sl()));
+  sl.registerLazySingleton(() => SavePlanning(sl()));
+  sl.registerFactory(() => PlanningCubit(
+        getPlanning: sl(),
+        savePlanning: sl(),
+        getTransactionsByMonth: sl(),
+        getCategories: sl(),
       ));
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/presentation/bloc/auth_bloc.dart';
@@ -15,6 +14,7 @@ import '../features/accounts/presentation/pages/accounts_page.dart';
 import '../features/accounts/presentation/pages/add_account_page.dart';
 import '../features/categories/presentation/pages/categories_page.dart';
 import '../features/categories/presentation/pages/add_category_page.dart';
+import '../features/planning/presentation/pages/planning_page.dart';
 import '../features/reports/presentation/pages/reports_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
@@ -36,6 +36,7 @@ abstract class AppRoutes {
   static const categories = '/categories';
   static const addCategory = '/add-category';
   static const reports = '/reports';
+  static const planning = '/planning';
   static const settings = '/settings';
 }
 
@@ -82,6 +83,10 @@ class AppRouter {
             GoRoute(
               path: AppRoutes.reports,
               pageBuilder: (_, __) => const NoTransitionPage(child: ReportsPage()),
+            ),
+            GoRoute(
+              path: AppRoutes.planning,
+              pageBuilder: (_, __) => const NoTransitionPage(child: PlanningPage()),
             ),
             GoRoute(
               path: AppRoutes.settings,

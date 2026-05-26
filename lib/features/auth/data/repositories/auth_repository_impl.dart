@@ -71,4 +71,14 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Left(UnknownFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, void>> updateSalary(String uid, int salary) async {
+    try {
+      await _dataSource.updateSalary(uid, salary);
+      return const Right(null);
+    } catch (_) {
+      return const Left(UnknownFailure());
+    }
+  }
 }

@@ -22,6 +22,7 @@ abstract class AppStrings {
   static const String dashboard = 'Início';
   static const String transactions = 'Transações';
   static const String reports = 'Relatórios';
+  static const String planning = 'Planejamento';
   static const String settings = 'Configurações';
 
   // Transactions
