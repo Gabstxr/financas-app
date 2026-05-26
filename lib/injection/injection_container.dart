@@ -18,6 +18,7 @@ import '../features/accounts/domain/repositories/accounts_repository.dart';
 import '../features/accounts/domain/usecases/add_account.dart';
 import '../features/accounts/domain/usecases/delete_account.dart';
 import '../features/accounts/domain/usecases/get_accounts.dart';
+import '../features/accounts/domain/usecases/recalculate_balances.dart';
 import '../features/accounts/domain/usecases/update_account.dart';
 import '../features/accounts/presentation/bloc/accounts_bloc.dart';
 
@@ -90,11 +91,13 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => AddAccount(sl()));
   sl.registerLazySingleton(() => UpdateAccount(sl()));
   sl.registerLazySingleton(() => DeleteAccount(sl()));
+  sl.registerLazySingleton(() => RecalculateBalances(sl()));
   sl.registerLazySingleton(() => AccountsBloc(
         getAccounts: sl(),
         addAccount: sl(),
         updateAccount: sl(),
         deleteAccount: sl(),
+        recalculateBalances: sl(),
       ));
 
   // Categories

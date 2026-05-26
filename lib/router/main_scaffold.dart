@@ -58,6 +58,16 @@ class _MainScaffoldState extends State<MainScaffold> {
   }
 
   void _onTap(BuildContext context, int index) {
+    if (index == 0) {
+      final auth = context.read<AuthBloc>().state;
+      if (auth is AuthAuthenticated) {
+        final cubit = sl<DashboardCubit>();
+        final month = cubit.state is DashboardLoaded
+            ? (cubit.state as DashboardLoaded).currentMonth
+            : null;
+        cubit.load(auth.user.uid, month: month);
+      }
+    }
     switch (index) {
       case 0:
         context.go(AppRoutes.dashboard);

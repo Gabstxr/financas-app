@@ -85,4 +85,14 @@ class AccountsRepositoryImpl implements AccountsRepository {
       return const Left(ServerFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, void>> recalculateBalances(String userId) async {
+    try {
+      await _dataSource.recalculateBalances(userId);
+      return const Right(null);
+    } on ServerException {
+      return const Left(ServerFailure());
+    }
+  }
 }

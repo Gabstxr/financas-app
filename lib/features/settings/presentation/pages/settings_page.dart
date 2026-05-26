@@ -6,7 +6,9 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../injection/injection_container.dart';
 import '../../../../router/app_router.dart';
+import '../../../accounts/presentation/bloc/accounts_bloc.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -35,6 +37,46 @@ class SettingsPage extends StatelessWidget {
               icon: Icons.category_outlined,
               title: 'Categorias',
               onTap: () => context.push(AppRoutes.categories),
+            ),
+            _SettingsTile(
+              icon: Icons.calculate_outlined,
+              title: 'Recalcular saldos',
+              subtitle: 'Corrige saldos baseado em todas as transações',
+              onTap: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    backgroundColor: AppColors.card,
+                    title: const Text('Recalcular saldos?'),
+                    content: const Text(
+                      'Isso recalcula o saldo de todas as contas com base em todas as transações registradas.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancelar'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.primary),
+                        child: const Text('Recalcular'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true && context.mounted) {
+                  final authState = context.read<AuthBloc>().state;
+                  if (authState is AuthAuthenticated) {
+                    sl<AccountsBloc>().add(
+                      AccountsRecalculateRequested(authState.user.uid),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Saldos recalculados!')),
+                    );
+                  }
+                }
+              },
             ),
           ]),
           const SizedBox(height: AppSizes.md),

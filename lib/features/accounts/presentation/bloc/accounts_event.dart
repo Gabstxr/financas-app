@@ -34,3 +34,10 @@ class AccountsDeleteRequested extends AccountsEvent {
   @override
   List<Object> get props => [userId, accountId];
 }
+
+class AccountsRecalculateRequested extends AccountsEvent {
+  final String userId;
+  const AccountsRecalculateRequested(this.userId);
+  @override
+  List<Object> get props => [userId];
+}

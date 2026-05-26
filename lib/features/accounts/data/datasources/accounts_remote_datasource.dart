@@ -8,6 +8,7 @@ abstract class AccountsRemoteDataSource {
   Future<AccountModel> updateAccount(AccountModel account);
   Future<void> deleteAccount(String userId, String accountId);
   Future<void> updateBalance(String userId, String accountId, int newBalance);
+  Future<void> recalculateBalances(String userId);
 }
 
 class AccountsRemoteDataSourceImpl implements AccountsRemoteDataSource {
@@ -70,6 +71,41 @@ class AccountsRemoteDataSourceImpl implements AccountsRemoteDataSource {
   Future<void> updateBalance(String userId, String accountId, int newBalance) async {
     try {
       await _collection(userId).doc(accountId).update({'balance': newBalance});
+    } catch (_) {
+      throw const ServerException();
+    }
+  }
+
+  @override
+  Future<void> recalculateBalances(String userId) async {
+    try {
+      final accounts = await getAccounts(userId);
+      final txSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('transactions')
+          .where('isDeleted', isEqualTo: false)
+          .get();
+
+      final deltas = <String, int>{};
+      for (final doc in txSnapshot.docs) {
+        final data = doc.data();
+        final accountId = data['accountId'] as String? ?? '';
+        final amount = (data['amount'] as num?)?.toInt() ?? 0;
+        final type = data['type'] as String? ?? '';
+        if (type == 'income') {
+          deltas[accountId] = (deltas[accountId] ?? 0) + amount;
+        } else if (type == 'expense') {
+          deltas[accountId] = (deltas[accountId] ?? 0) - amount;
+        }
+      }
+
+      final batch = _firestore.batch();
+      for (final account in accounts) {
+        final correct = account.initialBalance + (deltas[account.id] ?? 0);
+        batch.update(_collection(userId).doc(account.id), {'balance': correct});
+      }
+      await batch.commit();
     } catch (_) {
       throw const ServerException();
     }
