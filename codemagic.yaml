@@ -1,0 +1,20 @@
+workflows:
+  ios-no-signing:
+    name: iOS Build (no signing)
+    max_build_duration: 30
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get packages
+        script: flutter pub get
+      - name: Build iOS (no signing)
+        script: |
+          flutter build ios --release --no-codesign
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/Runner.app
+          zip -r app.ipa Payload
+    artifacts:
+      - build/ios/iphoneos/app.ipa
