@@ -129,7 +129,7 @@ class TransactionDetailPage extends StatelessWidget {
             _DetailRow(
               icon: Icons.south_west_rounded,
               label: 'Conta de destino',
-              value: transaction.toAccountName ?? transaction.toAccountId ?? '-',
+              value: transaction.toAccountName ?? 'Conta de destino',
             ),
           ],
           if (transaction.notes != null && transaction.notes!.isNotEmpty) ...[

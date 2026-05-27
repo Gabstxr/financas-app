@@ -291,11 +291,14 @@ class _BillCard extends StatelessWidget {
                 children: [
                   Icon(Icons.calendar_today_outlined, size: 12, color: statusColor),
                   const SizedBox(width: 4),
-                  Text(
-                    bill.isPaid && bill.paidAt != null
-                        ? 'Pago em ${DateFormat('dd/MM', 'pt_BR').format(bill.paidAt!)}'
-                        : 'Vence ${DateFormat('dd/MM', 'pt_BR').format(bill.dueDate)}',
-                    style: AppTextStyles.labelSmall.copyWith(color: statusColor),
+                  Flexible(
+                    child: Text(
+                      bill.isPaid && bill.paidAt != null
+                          ? 'Pago em ${DateFormat('dd/MM', 'pt_BR').format(bill.paidAt!)}'
+                          : 'Vence ${DateFormat('dd/MM', 'pt_BR').format(bill.dueDate)}',
+                      style: AppTextStyles.labelSmall.copyWith(color: statusColor),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   if (bill.isRecurring) ...[
                     const SizedBox(width: AppSizes.xs),
@@ -306,26 +309,26 @@ class _BillCard extends StatelessWidget {
                 ],
               ),
               if (bill.accountName != null)
-                Text(bill.accountName!, style: AppTextStyles.labelSmall),
+                Text(bill.accountName!, style: AppTextStyles.labelSmall,
+                    overflow: TextOverflow.ellipsis),
             ],
           ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
+          trailing: SizedBox(
+            width: 110,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Flexible(
+                  child: Text(
                     bill.amount > 0 ? bill.amount.toBRL : 'A definir',
                     style: AppTextStyles.amountSmall.copyWith(
                       color: bill.isPaid ? AppColors.income : AppColors.expense,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ),
-              const SizedBox(width: AppSizes.sm),
-              PopupMenuButton<String>(
+                ),
+                const SizedBox(width: 2),
+                PopupMenuButton<String>(
                 color: AppColors.card,
                 icon: const Icon(Icons.more_vert_rounded,
                     color: AppColors.textSecondary, size: 20),
@@ -363,6 +366,8 @@ class _BillCard extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
+}
+

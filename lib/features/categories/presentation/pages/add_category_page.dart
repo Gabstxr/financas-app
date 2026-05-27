@@ -94,8 +94,8 @@ class _AddCategoryPageState extends State<AddCategoryPage> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? (type == TransactionType.expense
-                                  ? AppColors.expense.withOpacity(0.15)
-                                  : AppColors.income.withOpacity(0.15))
+                                  ? AppColors.expense.withValues(alpha: 0.15)
+                                  : AppColors.income.withValues(alpha: 0.15))
                               : AppColors.surface,
                           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                           border: Border.all(

@@ -36,6 +36,7 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
 }
 
 kotlin {
@@ -46,4 +47,11 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+// Disable Crashlytics mapping file upload (groovy/XmlSlurper incompatibility with AGP 8.x)
+tasks.whenTaskAdded {
+    if (name.startsWith("uploadCrashlyticsMappingFile")) {
+        enabled = false
+    }
 }

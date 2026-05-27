@@ -28,12 +28,14 @@ class PlanningCubit extends Cubit<PlanningState> {
       '${month.year}-${month.month.toString().padLeft(2, '0')}';
 
   Future<void> load(String userId, {DateTime? month}) async {
+    if (isClosed) return;
     emit(PlanningLoading());
 
     final targetMonth = month ?? DateTime.now();
     final mid = monthId(targetMonth);
 
     final catResult = await getCategories(userId);
+    if (isClosed) return;
     List<CategoryEntity>? categories;
     catResult.fold(
       (f) => emit(PlanningError(f.message)),
@@ -43,6 +45,7 @@ class PlanningCubit extends Cubit<PlanningState> {
 
     final txResult =
         await getTransactionsByMonth(userId, targetMonth.year, targetMonth.month);
+    if (isClosed) return;
     final spentByCategory = <String, int>{};
     var totalIncome = 0;
     bool txError = false;
@@ -67,6 +70,7 @@ class PlanningCubit extends Cubit<PlanningState> {
     PlanningEntity? planning;
     bool planError = false;
     final planResult = await getPlanning(userId, mid);
+    if (isClosed) return;
     planResult.fold(
       (f) {
         planError = true;
@@ -101,6 +105,7 @@ class PlanningCubit extends Cubit<PlanningState> {
 
   Future<void> save(String userId, PlanningEntity planning) async {
     final result = await savePlanning(planning);
+    if (isClosed) return;
     result.fold(
       (f) => emit(PlanningError(f.message)),
       (_) {

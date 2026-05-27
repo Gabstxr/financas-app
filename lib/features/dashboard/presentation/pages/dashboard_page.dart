@@ -98,7 +98,9 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: Text(message, style: AppTextStyles.bodyMedium),
                 ),
               DashboardLoaded() => _buildContent(context, state),
-              _ => const SizedBox(),
+              _ => const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
             },
           ),
         );

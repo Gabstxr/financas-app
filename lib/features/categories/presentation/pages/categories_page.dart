@@ -72,6 +72,41 @@ class _CategoryList extends StatelessWidget {
 
   const _CategoryList({required this.categories});
 
+  void _confirmDelete(BuildContext context, CategoryEntity cat) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.card,
+        title: const Text('Excluir categoria?'),
+        content: Text(
+          cat.isDefault
+              ? '"${cat.name}" é uma categoria padrão. Transações existentes não serão afetadas, mas ela não ficará mais disponível para novas transações.'
+              : 'A categoria "${cat.name}" será removida.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              final authState = context.read<AuthBloc>().state;
+              if (authState is AuthAuthenticated) {
+                context.read<CategoriesBloc>().add(CategoriesDeleteRequested(
+                      userId: authState.user.uid,
+                      categoryId: cat.id,
+                    ));
+              }
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (categories.isEmpty) {
@@ -95,7 +130,7 @@ class _CategoryList extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppSizes.radiusSm),
             ),
             child: Icon(Icons.circle, color: color, size: 14),
@@ -104,21 +139,11 @@ class _CategoryList extends StatelessWidget {
           subtitle: cat.isDefault
               ? Text('Padrão', style: AppTextStyles.labelSmall)
               : null,
-          trailing: !cat.isDefault
-              ? IconButton(
-                  icon: const Icon(Icons.delete_outline_rounded,
-                      color: AppColors.textSecondary),
-                  onPressed: () {
-                    final authState = context.read<AuthBloc>().state;
-                    if (authState is AuthAuthenticated) {
-                      context.read<CategoriesBloc>().add(CategoriesDeleteRequested(
-                            userId: authState.user.uid,
-                            categoryId: cat.id,
-                          ));
-                    }
-                  },
-                )
-              : null,
+          trailing: IconButton(
+            icon: const Icon(Icons.delete_outline_rounded,
+                color: AppColors.textSecondary),
+            onPressed: () => _confirmDelete(context, cat),
+          ),
         );
       },
     );

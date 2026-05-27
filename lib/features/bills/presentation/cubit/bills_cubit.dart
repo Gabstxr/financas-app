@@ -26,8 +26,10 @@ class BillsCubit extends Cubit<BillsState> {
   }) : super(BillsInitial());
 
   Future<void> load(String userId) async {
+    if (isClosed) return;
     emit(BillsLoading());
     final result = await getBills(userId);
+    if (isClosed) return;
     result.fold(
       (f) => emit(BillsError(f.message)),
       (bills) => emit(BillsLoaded(bills)),
@@ -36,6 +38,7 @@ class BillsCubit extends Cubit<BillsState> {
 
   Future<void> add(BillEntity bill) async {
     final result = await addBill(bill);
+    if (isClosed) return;
     result.fold(
       (f) => emit(BillsError(f.message)),
       (added) {
@@ -49,6 +52,7 @@ class BillsCubit extends Cubit<BillsState> {
 
   Future<void> update(BillEntity bill) async {
     final result = await updateBill(bill);
+    if (isClosed) return;
     result.fold(
       (f) => emit(BillsError(f.message)),
       (updated) {
@@ -64,6 +68,7 @@ class BillsCubit extends Cubit<BillsState> {
 
   Future<void> delete(String userId, String billId) async {
     final result = await deleteBill(userId, billId);
+    if (isClosed) return;
     result.fold(
       (f) => emit(BillsError(f.message)),
       (_) {
@@ -79,6 +84,7 @@ class BillsCubit extends Cubit<BillsState> {
 
   Future<void> markPaid(BillEntity bill, String userId) async {
     final result = await markBillPaid(bill);
+    if (isClosed) return;
     result.fold(
       (f) => emit(BillsError(f.message)),
       (_) => load(userId),
