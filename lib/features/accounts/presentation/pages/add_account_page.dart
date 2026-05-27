@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/extensions/currency_extension.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -29,10 +30,23 @@ class _AddAccountPageState extends State<AddAccountPage> {
   AccountType _selectedType = AccountType.checking;
   String _selectedColor = '#7C3AED';
 
+  bool get _isEditing => widget.account != null;
+
   final List<String> _colors = [
     '#7C3AED', '#10B981', '#EF4444', '#3B82F6',
     '#F59E0B', '#8B5CF6', '#06B6D4', '#EC4899',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditing) {
+      _nameController.text = widget.account!.name;
+      _balanceController.text = widget.account!.balance.toReaisFormatted;
+      _selectedType = widget.account!.type;
+      _selectedColor = widget.account!.color;
+    }
+  }
 
   @override
   void dispose() {
@@ -47,9 +61,7 @@ class _AddAccountPageState extends State<AddAccountPage> {
     final authState = context.read<AuthBloc>().state;
     if (authState is! AuthAuthenticated) return;
 
-    final balance = int.tryParse(
-            _balanceController.text.replaceAll(RegExp(r'[^0-9]'), '')) ??
-        0;
+    final balance = _balanceController.text.parseToCents;
 
     final account = AccountEntity(
       id: widget.account?.id ?? '',
@@ -57,13 +69,13 @@ class _AddAccountPageState extends State<AddAccountPage> {
       name: _nameController.text.trim(),
       type: _selectedType,
       balance: balance,
-      initialBalance: balance,
+      initialBalance: widget.account?.initialBalance ?? balance,
       color: _selectedColor,
       icon: 'account_balance_wallet',
       createdAt: widget.account?.createdAt ?? DateTime.now(),
     );
 
-    if (widget.account != null) {
+    if (_isEditing) {
       context.read<AccountsBloc>().add(AccountsUpdateRequested(account));
     } else {
       context.read<AccountsBloc>().add(AccountsAddRequested(account));
@@ -71,14 +83,52 @@ class _AddAccountPageState extends State<AddAccountPage> {
     context.pop();
   }
 
+  void _confirmDelete(BuildContext context) {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) return;
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.card,
+        title: const Text('Apagar conta?'),
+        content: Text('A conta "${widget.account!.name}" será removida.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<AccountsBloc>().add(AccountsDeleteRequested(
+                    userId: authState.user.uid,
+                    accountId: widget.account!.id,
+                  ));
+              context.pop();
+            },
+            style: FilledButton.styleFrom(backgroundColor: AppColors.expense),
+            child: const Text('Apagar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(widget.account != null
-            ? AppStrings.editAccount
-            : AppStrings.addAccount),
+        title: Text(_isEditing ? AppStrings.editAccount : AppStrings.addAccount),
+        actions: [
+          if (_isEditing)
+            IconButton(
+              icon: const Icon(Icons.delete_outline_rounded),
+              color: AppColors.expense,
+              onPressed: () => _confirmDelete(context),
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSizes.md),
@@ -100,7 +150,7 @@ class _AddAccountPageState extends State<AddAccountPage> {
               _buildTypeSelector(),
               const SizedBox(height: AppSizes.md),
               AppTextField(
-                label: AppStrings.initialBalance,
+                label: _isEditing ? 'Saldo atual' : AppStrings.initialBalance,
                 controller: _balanceController,
                 prefixIcon: Icons.attach_money_rounded,
                 keyboardType: TextInputType.number,
@@ -142,8 +192,7 @@ class _AddAccountPageState extends State<AddAccountPage> {
             child: Text(
               type.label,
               style: AppTextStyles.labelLarge.copyWith(
-                color:
-                    isSelected ? AppColors.primaryLight : AppColors.textSecondary,
+                color: isSelected ? AppColors.primaryLight : AppColors.textSecondary,
               ),
             ),
           ),
@@ -166,9 +215,7 @@ class _AddAccountPageState extends State<AddAccountPage> {
             decoration: BoxDecoration(
               color: color,
               shape: BoxShape.circle,
-              border: isSelected
-                  ? Border.all(color: Colors.white, width: 3)
-                  : null,
+              border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
             ),
             child: isSelected
                 ? const Icon(Icons.check_rounded, color: Colors.white, size: 20)

@@ -118,10 +118,15 @@ class TransactionListItem extends StatelessWidget {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      if (transaction.accountName != null)
-                        Text(transaction.accountName!,
-                            style: AppTextStyles.labelSmall),
-                      const Text(' → ', style: AppTextStyles.labelSmall),
+                      Flexible(
+                        child: Text(
+                          '${transaction.accountName ?? ''} → ${transaction.toAccountName ?? ''}',
+                          style: AppTextStyles.labelSmall,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const Text(' · ', style: AppTextStyles.labelSmall),
                       Text(
                         transaction.date.toRelative,
                         style: AppTextStyles.labelSmall,

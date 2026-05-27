@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../accounts/presentation/bloc/accounts_bloc.dart';
+import '../../../dashboard/presentation/bloc/dashboard_cubit.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/usecases/add_transaction.dart';
 import '../../domain/usecases/delete_transaction.dart';
@@ -16,6 +17,7 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
   final UpdateTransaction updateTransaction;
   final DeleteTransaction deleteTransaction;
   final AccountsBloc accountsBloc;
+  final DashboardCubit dashboardCubit;
 
   TransactionsBloc({
     required this.getTransactionsByMonth,
@@ -23,11 +25,19 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
     required this.updateTransaction,
     required this.deleteTransaction,
     required this.accountsBloc,
+    required this.dashboardCubit,
   }) : super(TransactionsInitial()) {
     on<TransactionsLoadRequested>(_onLoad);
     on<TransactionsAddRequested>(_onAdd);
     on<TransactionsUpdateRequested>(_onUpdate);
     on<TransactionsDeleteRequested>(_onDelete);
+  }
+
+  void _reloadDashboard(String userId) {
+    final currentMonth = dashboardCubit.state is DashboardLoaded
+        ? (dashboardCubit.state as DashboardLoaded).currentMonth
+        : null;
+    dashboardCubit.load(userId, month: currentMonth);
   }
 
   Future<void> _onLoad(TransactionsLoadRequested event, Emitter<TransactionsState> emit) async {
@@ -49,6 +59,7 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
       (failure) => emit(TransactionsError(failure.message)),
       (transaction) {
         accountsBloc.add(AccountsLoadRequested(transaction.userId));
+        _reloadDashboard(transaction.userId);
 
         if (state is TransactionsLoaded) {
           final current = state as TransactionsLoaded;
@@ -74,6 +85,7 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
       (failure) => emit(TransactionsError(failure.message)),
       (updated) {
         accountsBloc.add(AccountsLoadRequested(updated.userId));
+        _reloadDashboard(updated.userId);
         final transactions = current.transactions
             .map((t) => t.id == updated.id ? updated : t)
             .toList();
@@ -92,6 +104,7 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
       (failure) => emit(TransactionsError(failure.message)),
       (_) {
         accountsBloc.add(AccountsLoadRequested(event.transaction.userId));
+        _reloadDashboard(event.transaction.userId);
         final transactions = current.transactions
             .where((t) => t.id != event.transaction.id)
             .toList();

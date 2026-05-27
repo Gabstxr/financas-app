@@ -18,6 +18,7 @@ import '../features/bills/presentation/pages/bills_page.dart';
 import '../features/planning/presentation/pages/planning_page.dart';
 import '../features/reports/presentation/pages/reports_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
+import '../features/accounts/domain/entities/account_entity.dart';
 import '../features/transactions/domain/entities/transaction_entity.dart';
 import 'main_scaffold.dart';
 
@@ -110,7 +111,7 @@ class AppRouter {
         ),
         GoRoute(
           path: AppRoutes.addAccount,
-          builder: (_, __) => const AddAccountPage(),
+          builder: (_, state) => AddAccountPage(account: state.extra as AccountEntity?),
         ),
         GoRoute(
           path: AppRoutes.categories,
