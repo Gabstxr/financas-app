@@ -28,8 +28,8 @@ class AppCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(borderRadius ?? AppSizes.radiusLg),
-        splashColor: AppColors.primary.withOpacity(0.08),
-        highlightColor: AppColors.primary.withOpacity(0.04),
+        splashColor: AppColors.primary.withValues(alpha: 0.08),
+        highlightColor: AppColors.primary.withValues(alpha: 0.04),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(borderRadius ?? AppSizes.radiusLg),

@@ -11,10 +11,12 @@ class ReportsCubit extends Cubit<ReportsState> {
   ReportsCubit({required this.getTransactionsByMonth}) : super(ReportsInitial());
 
   Future<void> load(String userId, {DateTime? month}) async {
+    if (isClosed) return;
     emit(ReportsLoading());
     final targetMonth = month ?? DateTime.now();
     final result = await getTransactionsByMonth(
         userId, targetMonth.year, targetMonth.month);
+    if (isClosed) return;
     result.fold(
       (failure) => emit(ReportsError(failure.message)),
       (transactions) => emit(ReportsLoaded(

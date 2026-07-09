@@ -104,15 +104,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthOnboardingCompleted event,
     Emitter<AuthState> emit,
   ) async {
-    await authRepository.completeOnboarding(event.userId);
-    if (state is AuthAuthenticated) {
-      emit(AuthAuthenticated(
-        (state as AuthAuthenticated).user.copyWith(
-          onboardingDone: true,
-          salary: event.salary > 0 ? event.salary : null,
-        ),
-      ));
-    }
+    final result = await authRepository.completeOnboarding(event.userId);
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) {
+        if (state is AuthAuthenticated) {
+          emit(AuthAuthenticated(
+            (state as AuthAuthenticated).user.copyWith(
+              onboardingDone: true,
+              salary: event.salary > 0 ? event.salary : null,
+            ),
+          ));
+        }
+      },
+    );
   }
 
   @override

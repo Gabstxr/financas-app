@@ -154,6 +154,12 @@ class _DashboardPageState extends State<DashboardPage> {
             padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
             child: _HealthCard(state: state),
           ),
+        ] else ...[
+          const SizedBox(height: AppSizes.md),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+            child: _PlanningSuggestionCard(),
+          ),
         ],
         if (state.pendingBills.isNotEmpty) ...[
           const SizedBox(height: AppSizes.md),
@@ -302,6 +308,49 @@ class _UpcomingBillsCard extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _PlanningSuggestionCard extends StatelessWidget {
+  const _PlanningSuggestionCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.md),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.favorite_outline_rounded,
+              color: AppColors.primaryLight, size: 22),
+          const SizedBox(width: AppSizes.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Crie seu plano financeiro', style: AppTextStyles.labelMedium),
+                const SizedBox(height: 2),
+                Text(
+                  'Defina seu orçamento com o método Kakeibo',
+                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () => context.go(AppRoutes.planning),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primaryLight,
+            ),
+            child: const Text('Criar'),
+          ),
+        ],
       ),
     );
   }

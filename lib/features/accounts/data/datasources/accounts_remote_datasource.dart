@@ -97,6 +97,12 @@ class AccountsRemoteDataSourceImpl implements AccountsRemoteDataSource {
           deltas[accountId] = (deltas[accountId] ?? 0) + amount;
         } else if (type == 'expense') {
           deltas[accountId] = (deltas[accountId] ?? 0) - amount;
+        } else if (type == 'transfer') {
+          final toAccountId = data['toAccountId'] as String?;
+          deltas[accountId] = (deltas[accountId] ?? 0) - amount;
+          if (toAccountId != null && toAccountId.isNotEmpty) {
+            deltas[toAccountId] = (deltas[toAccountId] ?? 0) + amount;
+          }
         }
       }
 

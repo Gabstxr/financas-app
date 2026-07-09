@@ -43,13 +43,16 @@ class BillEntity extends Equatable {
     this.accountName,
   });
 
-  bool get isOverdue =>
-      !isPaid && dueDate.isBefore(DateTime.now().copyWith(hour: 0, minute: 0, second: 0));
+  static DateTime get _today {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  bool get isOverdue => !isPaid && dueDate.isBefore(_today);
 
   bool get isDueSoon {
     if (isPaid) return false;
-    final today = DateTime.now().copyWith(hour: 0, minute: 0, second: 0);
-    final diff = dueDate.difference(today).inDays;
+    final diff = dueDate.difference(_today).inDays;
     return diff >= 0 && diff <= 7;
   }
 

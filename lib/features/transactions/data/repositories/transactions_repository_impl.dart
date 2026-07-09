@@ -81,5 +81,6 @@ class TransactionsRepositoryImpl implements TransactionsRepository {
         categoryIcon: t.categoryIcon,
         categoryColor: t.categoryColor,
         accountName: t.accountName,
+        toAccountName: t.toAccountName,
       );
 }

@@ -32,7 +32,12 @@ class _AddBillPageState extends State<AddBillPage> {
   final _amountCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
 
-  DateTime _dueDate = DateTime.now().add(const Duration(days: 1));
+  DateTime _dueDate = _tomorrow();
+
+  static DateTime _tomorrow() {
+    final now = DateTime.now().add(const Duration(days: 1));
+    return DateTime(now.year, now.month, now.day);
+  }
   CategoryEntity? _selectedCategory;
   AccountEntity? _selectedAccount;
   bool _isRecurring = false;
